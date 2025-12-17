@@ -12,6 +12,12 @@ import com.fidelitas.matchmanager.modelo.Usuario;
 import java.time.LocalDate; // Para manejar fechas 
 import java.util.ArrayList; // El tipo de lista a usar
 import java.util.List; // La plantilla para la lista 
+import com.fidelitas.matchmanager.modelo.ListaEventos; // Lista enlazada simple que almacena y gestiona los eventos deportivos
+import com.fidelitas.matchmanager.modelo.ListaParticipantes; // Lista doblemente enlazada de participantes
+import com.fidelitas.matchmanager.modelo.NodoParticipante; // Nodo de la lista doblemente enlazada
+import com.fidelitas.matchmanager.modelo.Participante; // Clase modelo de participantes
+
+
 
 /**
  * esta clase es solo un borrador, todavía no tenemos implementada la parte de guardar y leer datos
@@ -93,4 +99,31 @@ public class ServicioDatosSimulados {
         
         return correo.contains("@") && password.equals("123");
     }
+    
+    public ListaEventos obtenerListaEventosPrueba() {
+    ListaEventos lista = new ListaEventos();
+
+    lista.agregar(new Evento("Torneo Nacional de Futbol", "Estadio Nacional", LocalDate.now().plusDays(10)));
+    lista.agregar(new Evento("Carrera de Atletismo", "La Sabana", LocalDate.now().plusDays(5)));
+    lista.agregar(new Evento("Campeonato de Voleibol", "Gimnasio Nacional", LocalDate.now().plusDays(20)));
+
+    return lista;
+    }
+    
+    /**
+ * Devuelve una Lista Doblemente Enlazada con participantes de prueba.
+ * Se usa para demostrar la estructura personalizada en la vista.
+ */
+    public ListaParticipantes obtenerListaParticipantesPrueba() {
+    ListaParticipantes lista = new ListaParticipantes();
+
+    lista.agregar(new Participante("Carlos Ramírez", "Leones FC", "Jugador", "Activo"));
+    lista.agregar(new Participante("Ana Torres", "Águilas", "Entrenadora", "Activo"));
+    lista.agregar(new Participante("Luis Gómez", "Titanes", "Jugador", "Inactivo"));
+    lista.agregar(new Participante("María Fernández", "Leones FC", "Fisioterapeuta", "Activo"));
+
+    return lista;
+}
+
+
 }

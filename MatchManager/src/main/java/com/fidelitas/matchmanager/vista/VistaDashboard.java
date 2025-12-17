@@ -23,6 +23,18 @@ import javafx.scene.layout.*; // Los "contenedores" (VBox, HBox, BorderPane, etc
 import javafx.scene.text.Font; // Para cambiar el tipo de letra
 import javafx.scene.text.FontWeight; // Para poner letra en "negrita"
 import javafx.stage.Stage; // La "ventana" principal de la aplicación
+import com.fidelitas.matchmanager.modelo.Evento; // Clase modelo de eventos
+import com.fidelitas.matchmanager.modelo.ListaEventos; // Lista enlazada simple de eventos
+import com.fidelitas.matchmanager.modelo.NodoEvento; // Nodo de la lista enlazada
+import com.fidelitas.matchmanager.controlador.ServicioDatosSimulados; // Controlador que provee datos de prueba
+import com.fidelitas.matchmanager.modelo.ListaParticipantes; // Lista doblemente enlazada de participantes
+import com.fidelitas.matchmanager.modelo.NodoParticipante; // Nodo de la lista doblemente enlazada
+import com.fidelitas.matchmanager.modelo.Participante; // Clase modelo de participantes
+// --- Librerías de JavaFX para texto enriquecido y colores ---
+import javafx.scene.text.Text; // 'Text' representa fragmentos de texto individuales.
+import javafx.scene.text.TextFlow; // 'TextFlow' permite combinar varios 'Text' con estilos distintos en una sola línea.
+import javafx.scene.paint.Color; // 'Color' nos da acceso a colores para aplicar en el resaltado de coincidencias.
+
 
 /**
  * La clase VistaDashboard es básicamente la ventana principal que ve el usuario después de iniciar sesión. 
@@ -78,60 +90,66 @@ public class VistaDashboard {
      * y le dice a la ventana (stage) que muestre esta nueva "escena"
      */
     public void mostrar() {
-        // MENÚ LATERAL:
-        // 'VBox' es un contenedor que apila las cosas verticalmente.
-        // El '10' es el espacio (en píxeles) que habrá entre cada botón.
-        VBox menuLateral = new VBox(10);
-        menuLateral.setPrefWidth(250); //ancho fijo de 250px.
-        menuLateral.setPadding(new Insets(20, 0, 0, 0)); // Margen: 20 arriba, 0 lo demás.
-        menuLateral.setStyle("-fx-background-color: " + COLOR_MENU_FONDO + ";"); // color azul oscuro.
+    // MENÚ LATERAL:
+    // 'VBox' es un contenedor que apila las cosas verticalmente.
+    // El '10' es el espacio (en píxeles) que habrá entre cada botón.
+    VBox menuLateral = new VBox(10);
+    menuLateral.setPrefWidth(250); // ancho fijo de 250px.
+    menuLateral.setPadding(new Insets(20, 0, 0, 0)); // Margen: 20 arriba, 0 lo demás.
+    menuLateral.setStyle("-fx-background-color: " + COLOR_MENU_FONDO + ";"); // color azul oscuro.
 
-        //este es el logo
-        Label lblLogo = new Label("Match Manager");
-        lblLogo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20)); // Letra grande y negrita
-        lblLogo.setStyle("-fx-text-fill: white; -fx-padding: 0 0 20 20;"); // Letra blanca y un margen
+    // este es el logo
+    Label lblLogo = new Label("Match Manager");
+    lblLogo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20)); // Letra grande y negrita
+    lblLogo.setStyle("-fx-text-fill: white; -fx-padding: 0 0 20 20;"); // Letra blanca y un margen
 
-        // Creamos los botones del menú usando
-        // 'crearBotonMenu' (está más abajo).
-        Button btnInicio = crearBotonMenu("Dashboard / Resumen");
-        Button btnEventos = crearBotonMenu("Eventos");
-        Button btnUsuarios = crearBotonMenu("Usuarios");
-        Button btnAjustes = crearBotonMenu("Ajustes");
-        Button btnSalir = crearBotonMenu("Cerrar Sesión");
+    // Creamos los botones del menú usando 'crearBotonMenu' (está más abajo).
+    Button btnInicio = crearBotonMenu("Dashboard / Resumen");
+    Button btnEventos = crearBotonMenu("Eventos");
+    Button btnUsuarios = crearBotonMenu("Usuarios");
+    Button btnParticipantes = crearBotonMenu("Participantes"); // 👈 nuevo botón
+    Button btnAjustes = crearBotonMenu("Ajustes");
+    Button btnSalir = crearBotonMenu("Cerrar Sesión");
 
-        // NAVEGACIÓN:
-        // 'setOnAction' es un "listener"
-        // ejecuta el código que está después de la flechita (->)".
-        
-        // Cuando hagan clic en "Inicio", llamamos al método que
-        // "dibuja" la pantalla de resumen en el centro.
-        btnInicio.setOnAction(e -> mostrarPantallaInicio());
-        btnEventos.setOnAction(e -> mostrarPantallaEventos());
-        btnUsuarios.setOnAction(e -> mostrarPantallaUsuarios());
-        btnAjustes.setOnAction(e -> mostrarPantallaAjustes());
-        
-        // OJO:
-        // Cuando le damos "Cerrar Sesión", lo que hace es
-        // 1. Crear una *nueva* instancia de 'VistaLogin'.
-        // 2. Le pasa el 'stage' (la MISMA ventana que estamos usando).
-        // 3. Llama a 'login.mostrar()'.
-        // 'VistaLogin' se va a encargar de poner su escena
-        // en *nuestro* 'stage', reemplazando el dashboard por el login.
-        btnSalir.setOnAction(e -> new VistaLogin(stage).mostrar());
+    // NAVEGACIÓN:
+    // 'setOnAction' es un "listener"
+    // ejecuta el código que está después de la flechita (->).
+    btnInicio.setOnAction(e -> mostrarPantallaInicio());
+    btnEventos.setOnAction(e -> mostrarPantallaEventos());
+    btnUsuarios.setOnAction(e -> mostrarPantallaUsuarios());
+    btnParticipantes.setOnAction(e -> mostrarPantallaParticipantes()); // 👈 conecta al método
+    btnAjustes.setOnAction(e -> mostrarPantallaAjustes());
 
-        // 'new Separator()' es solo la rayita gris que separa los botones.
-        // Añadimos todo al 'menuLateral' 
-        menuLateral.getChildren().addAll(lblLogo, btnInicio, btnEventos, btnUsuarios, btnAjustes, new Separator(), btnSalir);
-        
+    // OJO:
+    // Cuando le damos "Cerrar Sesión", lo que hace es
+    // 1. Crear una *nueva* instancia de 'VistaLogin'.
+    // 2. Le pasa el 'stage' (la MISMA ventana que estamos usando).
+    // 3. Llama a 'login.mostrar()'.
+    // 'VistaLogin' se va a encargar de poner su escena
+    // en *nuestro* 'stage', reemplazando el dashboard por el login.
+    btnSalir.setOnAction(e -> new VistaLogin(stage).mostrar());
 
-        // "Pone el 'menuLateral' que acabamos de crear en la zona izquierda".
-        layoutPrincipal.setLeft(menuLateral);
-        
-        mostrarPantallaInicio();
-        Scene scene = new Scene(layoutPrincipal, 1200, 800);
-        stage.setScene(scene);
-        stage.setTitle("Match Manager - Panel Principal");
-        stage.centerOnScreen(); // Centramos la ventana en el monitor.
+    // 'new Separator()' es solo la rayita gris que separa los botones.
+    // Añadimos todo al 'menuLateral' 
+    menuLateral.getChildren().addAll(
+        lblLogo,
+        btnInicio,
+        btnEventos,
+        btnUsuarios,
+        btnParticipantes, // 👈 agregado aquí
+        btnAjustes,
+        new Separator(),
+        btnSalir
+    );
+
+    // "Pone el 'menuLateral' que acabamos de crear en la zona izquierda".
+    layoutPrincipal.setLeft(menuLateral);
+
+    mostrarPantallaInicio();
+    Scene scene = new Scene(layoutPrincipal, 1200, 800);
+    stage.setScene(scene);
+    stage.setTitle("Match Manager - Panel Principal");
+    stage.centerOnScreen(); // Centramos la ventana en el monitor.
 
     }
 
@@ -414,4 +432,160 @@ public class VistaDashboard {
         // Ponemos el panel de ajustes en el CENTRO
         layoutPrincipal.setCenter(panel);
     }
+    
+    private void mostrarPantallaParticipantes() {
+    VBox panel = new VBox(20);
+    panel.setPadding(new Insets(30));
+    panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
+
+    Label titulo = new Label("Participantes Registrados");
+    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
+    titulo.setStyle("-fx-text-fill: #2c3e50;");
+
+    ListView<HBox> listaVisual = new ListView<>();
+    listaVisual.setStyle("-fx-background-color: white; -fx-background-radius: 5; "
+            + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);");
+
+    ListaParticipantes participantes = servicioDatos.obtenerListaParticipantesPrueba();
+
+    // Método auxiliar para refrescar lista en orden normal
+    Runnable refrescarLista = () -> {
+        listaVisual.getItems().clear();
+        NodoParticipante actual = participantes.getCabeza();
+        while (actual != null) {
+            Participante p = actual.getDato();
+            listaVisual.getItems().add(crearItemVisual(p, ""));
+            actual = actual.getSiguiente();
+        }
+    };
+    refrescarLista.run();
+
+    // --- FORMULARIO AGREGAR ---
+    TextField txtNombre = new TextField(); txtNombre.setPromptText("Nombre");
+    TextField txtEquipo = new TextField(); txtEquipo.setPromptText("Equipo");
+    TextField txtRol = new TextField(); txtRol.setPromptText("Rol");
+    TextField txtEstado = new TextField(); txtEstado.setPromptText("Estado");
+
+    Button btnAgregar = new Button("Agregar Participante");
+    btnAgregar.setOnAction(e -> {
+        Participante nuevo = new Participante(
+            txtNombre.getText(), txtEquipo.getText(), txtRol.getText(), txtEstado.getText()
+        );
+        participantes.agregar(nuevo);
+        refrescarLista.run();
+        txtNombre.clear(); txtEquipo.clear(); txtRol.clear(); txtEstado.clear();
+    });
+    HBox formularioAgregar = new HBox(10, txtNombre, txtEquipo, txtRol, txtEstado, btnAgregar);
+
+    // --- BUSCAR / FILTRAR DINÁMICO ---
+    TextField txtBuscar = new TextField(); txtBuscar.setPromptText("Buscar participante...");
+    txtBuscar.textProperty().addListener((obs, oldValue, newValue) -> {
+        listaVisual.getItems().clear();
+        if (newValue == null || newValue.isEmpty()) {
+            refrescarLista.run();
+        } else {
+            NodoParticipante actual = participantes.getCabeza();
+            while (actual != null) {
+                Participante p = actual.getDato();
+                if (p.getNombre().toLowerCase().contains(newValue.toLowerCase())) {
+                    listaVisual.getItems().add(crearItemVisual(p, newValue));
+                }
+                actual = actual.getSiguiente();
+            }
+        }
+    });
+
+    // --- ACCIONES AL SELECCIONAR ---
+    Button btnEliminarSeleccionado = new Button("Eliminar Seleccionado");
+    Button btnCambiarEstado = new Button("Cambiar Estado Seleccionado");
+
+    btnEliminarSeleccionado.setOnAction(e -> {
+        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
+        if (seleccionado != null && seleccionado.getUserData() instanceof Participante) {
+            Participante p = (Participante) seleccionado.getUserData();
+            boolean ok = participantes.eliminarPorNombre(p.getNombre());
+            if (ok) refrescarLista.run();
+        }
+    });
+
+    btnCambiarEstado.setOnAction(e -> {
+        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
+        if (seleccionado != null && seleccionado.getUserData() instanceof Participante) {
+            Participante p = (Participante) seleccionado.getUserData();
+            String nuevoEstado = "Activo".equalsIgnoreCase(p.getEstado()) ? "Inactivo" : "Activo";
+            participantes.cambiarEstado(p.getNombre(), nuevoEstado);
+            refrescarLista.run();
+        }
+    });
+
+    HBox accionesSeleccion = new HBox(10, btnEliminarSeleccionado, btnCambiarEstado);
+
+    // --- RECORRER LISTA ---
+    Button btnRecorrerAtras = new Button("Recorrer desde la cola");
+    btnRecorrerAtras.setOnAction(e -> {
+        listaVisual.getItems().clear();
+        NodoParticipante nodo = participantes.getCola();
+        while (nodo != null) {
+            Participante p = nodo.getDato();
+            listaVisual.getItems().add(crearItemVisual(p, ""));
+            nodo = nodo.getAnterior();
+        }
+    });
+
+    Button btnRecorrerCabeza = new Button("Recorrer desde la cabeza");
+    btnRecorrerCabeza.setOnAction(e -> refrescarLista.run());
+
+    HBox accionesRecorrer = new HBox(10, btnRecorrerAtras, btnRecorrerCabeza);
+
+    // --- ARMAMOS EL PANEL ---
+    panel.getChildren().addAll(
+        titulo,
+        listaVisual,
+        new Label("Agregar nuevo participante:"),
+        formularioAgregar,
+        new Label("Buscar participante (coincidencia parcial, resaltado):"),
+        txtBuscar,
+        new Label("Acciones sobre selección:"),
+        accionesSeleccion,
+        new Label("Recorrer lista:"),
+        accionesRecorrer
+    );
+
+    layoutPrincipal.setCenter(panel);
+}
+
+// Método auxiliar para crear ítem visual con resaltado y vínculo al objeto
+private HBox crearItemVisual(Participante p, String highlight) {
+    HBox box = new HBox(5);
+
+    TextFlow tfNombre;
+    String nombre = p.getNombre();
+
+    if (highlight != null && !highlight.isEmpty() && nombre.toLowerCase().contains(highlight.toLowerCase())) {
+        int start = nombre.toLowerCase().indexOf(highlight.toLowerCase());
+        int end = start + highlight.length();
+
+        Text antes = new Text(nombre.substring(0, start));
+        Text match = new Text(nombre.substring(start, end));
+        match.setFill(Color.RED);
+        match.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        Text despues = new Text(nombre.substring(end));
+
+        tfNombre = new TextFlow(new Text("👤 "), antes, match, despues);
+    } else {
+        tfNombre = new TextFlow(new Text("👤 " + nombre));
+    }
+
+    Label lblEquipo = new Label(" | 🏆 " + p.getEquipo());
+    Label lblRol = new Label(" | 🎭 " + p.getRol());
+    Label lblEstado = new Label(" | 📌 " + p.getEstado());
+
+    box.getChildren().addAll(tfNombre, lblEquipo, lblRol, lblEstado);
+
+    // Guardamos el objeto participante en el ítem para accederlo al seleccionar
+    box.setUserData(p);
+
+    return box;
+}
+
 }
