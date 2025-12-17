@@ -1,0 +1,7 @@
+com\fidelitas\matchmanager\Main.class
+com\fidelitas\matchmanager\controlador\ServicioDatosSimulados.class
+com\fidelitas\matchmanager\vista\VistaLogin.class
+com\fidelitas\matchmanager\App.class
+com\fidelitas\matchmanager\vista\VistaDashboard.class
+com\fidelitas\matchmanager\modelo\Evento.class
+com\fidelitas\matchmanager\modelo\Usuario.class
