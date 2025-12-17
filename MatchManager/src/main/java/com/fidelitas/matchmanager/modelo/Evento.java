@@ -1,48 +1,25 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.fidelitas.matchmanager.modelo;
 
-// Importamos la herramienta de Java para manejar fechas.
-// 'LocalDate' es un tipo de dato que guarda solo la fecha
 import java.time.LocalDate;
 
 /**
- * Esta clase Evento es una "Clase Modelo"
- *
- * Esta clase no es un evento si no como la base o estrcutura que va a tener cada evento creadoe en la app 
- * osea por medio de esta clase se exige que cada evento tenga: un 'nombre', una 'ubicacion' y una 'fecha'
- * esto obligatoriamente para que se pueda crear
- *
- * En las Vistas (como 'VistaDashboard'):
- * La tabla del dashboard recibe una lista de estos "objetos" Evento
- * y usa métodos (getNombre(), getFecha()) para sacarles la
- * información y mostrarla en las columnas de la ventana 
+ * Clase modelo para representar un Evento.
+ * Cada evento tiene un nombre, una ubicación y una fecha.
+ * Forma parte del paquete 'modelo' (sin dependencias de Swing).
  */
 public class Evento {
 
-  
-    
-    /*
-     * private claramente para proteger los datos
-     * La única forma de ponerle datos es al momento de crearlo (con el Constructor)
-     * y la única forma de leerlos es con los "Getters" (más abajo).
-     * Esto hace que el código sea mucho más ordenado y seguro.
-     */
-    private String nombre; // Para guardar el nombre
-    private String ubicacion; // Para guardar dónde es
-    private LocalDate fecha; // Para guardar la fecha del evento.
+    // --- Atributos privados ---
+    private String nombre;      // Nombre del evento
+    private String ubicacion;   // Ubicación del evento
+    private LocalDate fecha;    // Fecha del evento
 
     /**
-     * Evento (Constructor):
-     * Este es el método especial que se llama cada que se usa 
-     * "new Evento(...)"
-     * Es, básicamente, para crear los eventos
+     * Constructor: crea un nuevo evento con nombre, ubicación y fecha.
      *
-     * @param nombre El nombre del nuevo evento.
-     * @param ubicacion La ubicación 
-     * @param fecha La fecha 
+     * @param nombre Nombre del evento
+     * @param ubicacion Ubicación del evento
+     * @param fecha Fecha del evento
      */
     public Evento(String nombre, String ubicacion, LocalDate fecha) {
         this.nombre = nombre;
@@ -50,22 +27,41 @@ public class Evento {
         this.fecha = fecha;
     }
 
-    // Getters( para leer los datos):
-    /**
-     * Permite a otras clases preguntar, cuál es el nombre del evento
-     * @return El nombre (un String) que está guardado en 'this.nombre'.
-     */
-    public String getNombre() { return nombre; }
+    // --- Getters ---
+    /** @return el nombre del evento */
+    public String getNombre() {
+        return nombre;
+    }
 
-    /**
-     * Permite a otras clases preguntar, dónde es el evento
-     * @return La ubicación (un String) que está guardada en 'this.ubicacion'.
-     */
-    public String getUbicacion() { return ubicacion; }
+    /** @return la ubicación del evento */
+    public String getUbicacion() {
+        return ubicacion;
+    }
 
-    /**
-     * Permite a otras clases preguntar, cuándo es este evento
-     * @return La fecha (un LocalDate) que está guardada en 'this.fecha'.
-     */
-    public LocalDate getFecha() { return fecha; }
+    /** @return la fecha del evento */
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    // --- Setters ---
+    /** Cambia el nombre del evento */
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    /** Cambia la ubicación del evento */
+    public void setUbicacion(String ubicacion) {
+        this.ubicacion = ubicacion;
+    }
+
+    /** Cambia la fecha del evento */
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    // --- Utilitario para depuración ---
+    @Override
+    public String toString() {
+        return nombre + " | " + ubicacion + " | " + fecha;
+    }
 }

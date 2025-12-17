@@ -7,33 +7,42 @@ package com.fidelitas.matchmanager.vista;
 // --- Importaciones Clave ---
 // Importamos nuestra "base de datos de mentira". La vamos a necesitar
 // muchísimo en esta ventana para rellenar las tablas y listas.
+import java.time.LocalDate;
+
+import com.fidelitas.matchmanager.controlador.ControladorEventos;
 import com.fidelitas.matchmanager.controlador.ServicioDatosSimulados;
-// Importamos los "moldes" de Evento y Usuario. Los necesitamos para que
-// las tablas (como la de Usuarios) sepan qué forma tienen los datos.
 import com.fidelitas.matchmanager.modelo.Evento;
-import com.fidelitas.matchmanager.modelo.Usuario;
-import java.util.List; 
-// Importaciones de JavaFX (las herramientas para las ventanas)
-import javafx.geometry.Insets; // Para manejar márgenes y 'padding' (relleno)
-import javafx.geometry.Pos; // Para alinear cosas (ej: centrar texto)
-import javafx.scene.Scene; // La "escena", o sea, el contenido de la ventana
-import javafx.scene.control.*; // Botones, Etiquetas, Tablas, etc.
-import javafx.scene.control.cell.PropertyValueFactory; // ¡El "pegamento" mágico para las tablas!
-import javafx.scene.layout.*; // Los "contenedores" (VBox, HBox, BorderPane, etc.)
-import javafx.scene.text.Font; // Para cambiar el tipo de letra
-import javafx.scene.text.FontWeight; // Para poner letra en "negrita"
-import javafx.stage.Stage; // La "ventana" principal de la aplicación
-import com.fidelitas.matchmanager.modelo.Evento; // Clase modelo de eventos
-import com.fidelitas.matchmanager.modelo.ListaEventos; // Lista enlazada simple de eventos
-import com.fidelitas.matchmanager.modelo.NodoEvento; // Nodo de la lista enlazada
-import com.fidelitas.matchmanager.controlador.ServicioDatosSimulados; // Controlador que provee datos de prueba
-import com.fidelitas.matchmanager.modelo.ListaParticipantes; // Lista doblemente enlazada de participantes
-import com.fidelitas.matchmanager.modelo.NodoParticipante; // Nodo de la lista doblemente enlazada
-import com.fidelitas.matchmanager.modelo.Participante; // Clase modelo de participantes
-// --- Librerías de JavaFX para texto enriquecido y colores ---
-import javafx.scene.text.Text; // 'Text' representa fragmentos de texto individuales.
-import javafx.scene.text.TextFlow; // 'TextFlow' permite combinar varios 'Text' con estilos distintos en una sola línea.
-import javafx.scene.paint.Color; // 'Color' nos da acceso a colores para aplicar en el resaltado de coincidencias.
+import com.fidelitas.matchmanager.modelo.ListaEventos; // Para manejar márgenes y 'padding' (relleno)
+import com.fidelitas.matchmanager.modelo.ListaParticipantes; // Para alinear cosas (ej: centrar texto)
+import com.fidelitas.matchmanager.modelo.NodoEvento; // La "escena", o sea, el contenido de la ventana
+import com.fidelitas.matchmanager.modelo.NodoParticipante; // Botones, Etiquetas, Tablas, etc.
+import com.fidelitas.matchmanager.modelo.Participante; // ¡El "pegamento" mágico para las tablas!
+import com.fidelitas.matchmanager.modelo.Usuario; // Los "contenedores" (VBox, HBox, BorderPane, etc.)
+
+import javafx.geometry.Insets; // Para cambiar el tipo de letra
+import javafx.geometry.Pos; // Para poner letra en "negrita"
+import javafx.scene.Scene; // La "ventana" principal de la aplicación
+import javafx.scene.control.Button; // Clase modelo de eventos
+import javafx.scene.control.ComboBox; // Lista enlazada simple de eventos
+import javafx.scene.control.DatePicker; // Nodo de la lista enlazada
+import javafx.scene.control.Label; // Controlador que provee datos de prueba
+import javafx.scene.control.ListView; // Lista doblemente enlazada de participantes
+import javafx.scene.control.Separator; // Nodo de la lista doblemente enlazada
+import javafx.scene.control.TableColumn; // Clase modelo de participantes
+import javafx.scene.control.TableView; // 'Text' representa fragmentos de texto individuales.
+import javafx.scene.control.TextField; // 'TextFlow' permite combinar varios 'Text' con estilos distintos en una sola línea.
+import javafx.scene.control.cell.PropertyValueFactory; // 'Color' nos da acceso a colores para aplicar en el resaltado de coincidencias.
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.stage.Stage;
+
 
 
 /**
@@ -57,6 +66,11 @@ public class VistaDashboard {
     private final BorderPane layoutPrincipal;
     
     private final ServicioDatosSimulados servicioDatos;
+
+    // Eventos (lista real y su controlador)
+    private final ListaEventos listaEventos = new ListaEventos();
+    private final ControladorEventos controladorEventos = new ControladorEventos(listaEventos);
+
 
     // Definición de Colores:
     // Definimos los colores aquí como "constantes" (final String).
@@ -338,49 +352,124 @@ public class VistaDashboard {
     }
 
     /**
-     * MÉTODO: mostrarPantallaEventos()
-     * "Dibuja" la pantalla de Eventos
-     * OJO: A diferencia de la de Usuarios, esta pantalla no usa una 'Tabla'
-     * (TableView) sino una 'Lista simple' (ListView).
-     */
+    * MÉTODO: mostrarPantallaEventos()
+    * "Dibuja" la pantalla de gestión de eventos (CRUD)
+    * y la pone en el CENTRO del 'layoutPrincipal'.
+    */
+
     private void mostrarPantallaEventos() {
-        VBox panel = new VBox(20);
-        panel.setPadding(new Insets(30));
-        panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
-        
-        Label titulo = new Label("Eventos Próximos");
-        titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
-        titulo.setStyle("-fx-text-fill: #2c3e50;");
-        
-        // Creamos una 'ListView'. Esta solo muestra filas de texto (String).
-        ListView<String> listaVisual = new ListView<>();
-        listaVisual.setStyle("-fx-background-color: white; -fx-background-radius: 5; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-        
-        List<Evento> misEventos = servicioDatos.obtenerEventosPrueba();
-        
-        if (misEventos.isEmpty()) {
-            listaVisual.getItems().add("No hay eventos registrados.");
-        } else {
-            // 'for (Evento ev : misEventos)' significa:
-            // "Por cada 'Evento' (que llamaremos 'ev') dentro de la lista 'misEventos'..."
-            for (Evento ev : misEventos) {
-                // 3. "Construimos" el texto (String) a mano.
-                // Agarramos cada evento ('ev') y le sacamos los datos con
-                // los 'getters' (ev.getNombre(), ev.getUbicacion(), etc.)
-                // y los pegamos todos en un solo 'String' con emojis.
-                String fila = "🏆 " + ev.getNombre() + "   |   📍 " + ev.getUbicacion() + "   |   📅 " + ev.getFecha();
-                
-                // 4. Metemos el 'String' que acabamos de crear como una
-                // nueva fila en la lista visual.
-                listaVisual.getItems().add(fila);
-            }
+
+    // Panel
+    VBox panel = new VBox(20);
+    panel.setPadding(new Insets(30));
+    panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
+
+    Label titulo = new Label("Gestión de Eventos");
+    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
+    titulo.setStyle("-fx-text-fill: #2c3e50;");
+
+    // Tabla
+    TableView<Evento> tabla = new TableView<>();
+    tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    tabla.setStyle("-fx-background-color: white; -fx-background-radius: 5; "
+            + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);");
+
+    TableColumn<Evento, String> colNombre = new TableColumn<>("Nombre");
+    colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+
+    TableColumn<Evento, String> colUbicacion = new TableColumn<>("Ubicación");
+    colUbicacion.setCellValueFactory(new PropertyValueFactory<>("ubicacion"));
+
+    TableColumn<Evento, LocalDate> colFecha = new TableColumn<>("Fecha");
+    colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+
+    tabla.getColumns().addAll(colNombre, colUbicacion, colFecha);
+
+    // Formulario
+    TextField txtNombre = new TextField();
+    txtNombre.setPromptText("Nombre");
+
+    TextField txtUbicacion = new TextField();
+    txtUbicacion.setPromptText("Ubicación");
+
+    DatePicker pickerFecha = new DatePicker();
+    pickerFecha.setPromptText("Fecha");
+
+    Button btnAgregar = new Button("Agregar");
+    Button btnActualizar = new Button("Actualizar");
+    Button btnEliminar = new Button("Eliminar");
+
+    HBox form = new HBox(10, txtNombre, txtUbicacion, pickerFecha,
+                         btnAgregar, btnActualizar, btnEliminar);
+
+    // Refrescar tabla
+    Runnable refrescar = () -> {
+        tabla.getItems().clear();
+        NodoEvento actual = controladorEventos.obtenerCabeza();
+        while (actual != null) {
+            tabla.getItems().add(actual.getDato());
+            actual = actual.getSiguiente();
         }
-        
-        panel.getChildren().addAll(titulo, new Label("Lista de eventos cargada del sistema:"), listaVisual);
-        
-        // 5. Ponemos este panel en el CENTRO del esqueleto.
-        layoutPrincipal.setCenter(panel);
-    }
+    };
+    refrescar.run();
+
+    // Agregar
+    btnAgregar.setOnAction(e -> {
+        String n = txtNombre.getText().trim();
+        String u = txtUbicacion.getText().trim();
+        LocalDate f = pickerFecha.getValue();
+        if (n.isEmpty() || u.isEmpty() || f == null) return;
+
+        controladorEventos.registrarEvento(n, u, f);
+        refrescar.run();
+
+        txtNombre.clear();
+        txtUbicacion.clear();
+        pickerFecha.setValue(null);
+    });
+
+    // Selección
+    tabla.getSelectionModel().selectedItemProperty().addListener((obs, old, ev) -> {
+        if (ev != null) {
+            txtNombre.setText(ev.getNombre());
+            txtUbicacion.setText(ev.getUbicacion());
+            pickerFecha.setValue(ev.getFecha());
+        }
+    });
+
+    // Actualizar
+    btnActualizar.setOnAction(e -> {
+        Evento ev = tabla.getSelectionModel().getSelectedItem();
+        if (ev == null) return;
+
+        controladorEventos.actualizarEvento(
+                ev.getNombre(),
+                pickerFecha.getValue(),
+                txtUbicacion.getText()
+        );
+
+        refrescar.run();
+    });
+
+    // Eliminar
+    btnEliminar.setOnAction(e -> {
+        Evento ev = tabla.getSelectionModel().getSelectedItem();
+        if (ev == null) return;
+
+        controladorEventos.eliminarEvento(ev.getNombre());
+        refrescar.run();
+    });
+
+    // Ensamblar
+    panel.getChildren().addAll(
+            titulo,
+            tabla,
+            form
+    );
+
+    layoutPrincipal.setCenter(panel);
+}
+
 
     /**
      * MÉTODO: mostrarPantallaAjustes()
