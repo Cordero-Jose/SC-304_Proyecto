@@ -41,17 +41,16 @@ public void cambiarEstado(String nombre, String nuevoEstado) {
     }
 
     /** Busca un participante por nombre de forma recursiva. */
-    public Participante buscarRecursivo(String nombre) {
-        return buscarRecursivoInterno(cabeza, nombre);
+    public void buscarRecursivoContiene(NodoParticipante nodo, String texto, java.util.List<Participante> resultados) {
+    if (nodo == null) return;
+
+    if (nodo.getDato().getNombre().toLowerCase().contains(texto.toLowerCase())) {
+        resultados.add(nodo.getDato());
     }
 
-    private Participante buscarRecursivoInterno(NodoParticipante actual, String nombre) {
-        if (actual == null) return null;
-        if (actual.getDato().getNombre().equalsIgnoreCase(nombre)) {
-            return actual.getDato();
-        }
-        return buscarRecursivoInterno(actual.getSiguiente(), nombre);
+    buscarRecursivoContiene(nodo.getSiguiente(), texto, resultados);
     }
+
 
     /** Elimina un participante por nombre. */
     public boolean eliminarPorNombre(String nombre) {

@@ -7,41 +7,52 @@ package com.fidelitas.matchmanager.vista;
 // --- Importaciones Clave ---
 // Importamos nuestra "base de datos de mentira". La vamos a necesitar
 // muchísimo en esta ventana para rellenar las tablas y listas.
-import java.time.LocalDate;
+// --- Java estándar ---
+import java.time.LocalDate; // fechas
 
-import com.fidelitas.matchmanager.controlador.ControladorEventos;
-import com.fidelitas.matchmanager.controlador.ServicioDatosSimulados;
-import com.fidelitas.matchmanager.modelo.Evento;
-import com.fidelitas.matchmanager.modelo.ListaEventos; // Para manejar márgenes y 'padding' (relleno)
-import com.fidelitas.matchmanager.modelo.ListaParticipantes; // Para alinear cosas (ej: centrar texto)
-import com.fidelitas.matchmanager.modelo.NodoEvento; // La "escena", o sea, el contenido de la ventana
-import com.fidelitas.matchmanager.modelo.NodoParticipante; // Botones, Etiquetas, Tablas, etc.
-import com.fidelitas.matchmanager.modelo.Participante; // ¡El "pegamento" mágico para las tablas!
-import com.fidelitas.matchmanager.modelo.Usuario; // Los "contenedores" (VBox, HBox, BorderPane, etc.)
+import com.fidelitas.matchmanager.controlador.ControladorEventos; // controlador eventos
+import com.fidelitas.matchmanager.controlador.ServicioDatosSimulados; // datos de prueba
+import com.fidelitas.matchmanager.modelo.Equipo;
+import com.fidelitas.matchmanager.modelo.Evento; // evento
+import com.fidelitas.matchmanager.modelo.ListaEventos; // lista enlazada simple eventos
+import com.fidelitas.matchmanager.modelo.ListaParticipantes; // nodo evento
+import com.fidelitas.matchmanager.modelo.NodoEvento; // participante
+import com.fidelitas.matchmanager.modelo.NodoParticipante; // lista doble participantes
+import com.fidelitas.matchmanager.modelo.NodoPartido;
+import com.fidelitas.matchmanager.modelo.Participante; // nodo participante
+import com.fidelitas.matchmanager.modelo.Partido;
+import com.fidelitas.matchmanager.modelo.Resultado;
+import com.fidelitas.matchmanager.modelo.Usuario; // usuario
 
-import javafx.geometry.Insets; // Para cambiar el tipo de letra
-import javafx.geometry.Pos; // Para poner letra en "negrita"
-import javafx.scene.Scene; // La "ventana" principal de la aplicación
-import javafx.scene.control.Button; // Clase modelo de eventos
-import javafx.scene.control.ComboBox; // Lista enlazada simple de eventos
-import javafx.scene.control.DatePicker; // Nodo de la lista enlazada
-import javafx.scene.control.Label; // Controlador que provee datos de prueba
-import javafx.scene.control.ListView; // Lista doblemente enlazada de participantes
-import javafx.scene.control.Separator; // Nodo de la lista doblemente enlazada
-import javafx.scene.control.TableColumn; // Clase modelo de participantes
-import javafx.scene.control.TableView; // 'Text' representa fragmentos de texto individuales.
-import javafx.scene.control.TextField; // 'TextFlow' permite combinar varios 'Text' con estilos distintos en una sola línea.
-import javafx.scene.control.cell.PropertyValueFactory; // 'Color' nos da acceso a colores para aplicar en el resaltado de coincidencias.
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
-import javafx.stage.Stage;
+import javafx.geometry.Insets; // equipo
+import javafx.geometry.Pos; // partido
+import javafx.scene.Scene; // cola partidos
+import javafx.scene.control.Button; // nodo partido
+import javafx.scene.control.ComboBox; // resultado
+import javafx.scene.control.DatePicker; // nodo resultado
+import javafx.scene.control.Label; // padding
+import javafx.scene.control.ListView; // alineación
+import javafx.scene.control.Separator; // escena
+import javafx.scene.control.SplitPane; // botón
+import javafx.scene.control.Tab; // combo equipos
+import javafx.scene.control.TabPane; // selector fecha
+import javafx.scene.control.TableColumn; // etiqueta
+import javafx.scene.control.TableView; // lista visual
+import javafx.scene.control.TextField; // separador
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.cell.PropertyValueFactory; // columna tabla
+import javafx.scene.layout.BorderPane; // tabla
+import javafx.scene.layout.GridPane; // campo texto
+import javafx.scene.layout.HBox; // diálogo resultado
+import javafx.scene.layout.VBox; // enlace columnas
+import javafx.scene.paint.Color; // contenedor pestañas
+import javafx.scene.text.Font; // pestaña
+import javafx.scene.text.FontWeight; // contenedor principal
+import javafx.scene.text.Text; // grid
+import javafx.scene.text.TextFlow; // fila
+import javafx.stage.Stage; // divisor vertical
+
+
 
 
 
@@ -353,13 +364,12 @@ public class VistaDashboard {
 
     /**
     * MÉTODO: mostrarPantallaEventos()
-    * "Dibuja" la pantalla de gestión de eventos (CRUD)
-    * y la pone en el CENTRO del 'layoutPrincipal'.
+    * CRUD + pestañas del evento seleccionado.
     */
+  // Pantalla de eventos (CRUD + Tabs)
 
     private void mostrarPantallaEventos() {
 
-    // Panel
     VBox panel = new VBox(20);
     panel.setPadding(new Insets(30));
     panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
@@ -370,9 +380,8 @@ public class VistaDashboard {
 
     // Tabla
     TableView<Evento> tabla = new TableView<>();
+    tabla.setMaxHeight(250);
     tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-    tabla.setStyle("-fx-background-color: white; -fx-background-radius: 5; "
-            + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);");
 
     TableColumn<Evento, String> colNombre = new TableColumn<>("Nombre");
     colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
@@ -386,23 +395,17 @@ public class VistaDashboard {
     tabla.getColumns().addAll(colNombre, colUbicacion, colFecha);
 
     // Formulario
-    TextField txtNombre = new TextField();
-    txtNombre.setPromptText("Nombre");
-
-    TextField txtUbicacion = new TextField();
-    txtUbicacion.setPromptText("Ubicación");
-
-    DatePicker pickerFecha = new DatePicker();
-    pickerFecha.setPromptText("Fecha");
+    TextField txtNombre = new TextField(); txtNombre.setPromptText("Nombre");
+    TextField txtUbicacion = new TextField(); txtUbicacion.setPromptText("Ubicación");
+    DatePicker pickerFecha = new DatePicker(); pickerFecha.setPromptText("Fecha");
 
     Button btnAgregar = new Button("Agregar");
     Button btnActualizar = new Button("Actualizar");
     Button btnEliminar = new Button("Eliminar");
 
-    HBox form = new HBox(10, txtNombre, txtUbicacion, pickerFecha,
-                         btnAgregar, btnActualizar, btnEliminar);
+    HBox form = new HBox(10, txtNombre, txtUbicacion, pickerFecha, btnAgregar, btnActualizar, btnEliminar);
 
-    // Refrescar tabla
+    // Refrescar
     Runnable refrescar = () -> {
         tabla.getItems().clear();
         NodoEvento actual = controladorEventos.obtenerCabeza();
@@ -415,20 +418,15 @@ public class VistaDashboard {
 
     // Agregar
     btnAgregar.setOnAction(e -> {
-        String n = txtNombre.getText().trim();
-        String u = txtUbicacion.getText().trim();
-        LocalDate f = pickerFecha.getValue();
-        if (n.isEmpty() || u.isEmpty() || f == null) return;
+        if (txtNombre.getText().isEmpty() || txtUbicacion.getText().isEmpty() || pickerFecha.getValue() == null)
+            return;
 
-        controladorEventos.registrarEvento(n, u, f);
+        controladorEventos.registrarEvento(txtNombre.getText(), txtUbicacion.getText(), pickerFecha.getValue());
         refrescar.run();
-
-        txtNombre.clear();
-        txtUbicacion.clear();
-        pickerFecha.setValue(null);
+        txtNombre.clear(); txtUbicacion.clear(); pickerFecha.setValue(null);
     });
 
-    // Selección
+    // Llenar formulario
     tabla.getSelectionModel().selectedItemProperty().addListener((obs, old, ev) -> {
         if (ev != null) {
             txtNombre.setText(ev.getNombre());
@@ -441,13 +439,7 @@ public class VistaDashboard {
     btnActualizar.setOnAction(e -> {
         Evento ev = tabla.getSelectionModel().getSelectedItem();
         if (ev == null) return;
-
-        controladorEventos.actualizarEvento(
-                ev.getNombre(),
-                pickerFecha.getValue(),
-                txtUbicacion.getText()
-        );
-
+        controladorEventos.actualizarEvento(ev.getNombre(), pickerFecha.getValue(), txtUbicacion.getText());
         refrescar.run();
     });
 
@@ -455,19 +447,322 @@ public class VistaDashboard {
     btnEliminar.setOnAction(e -> {
         Evento ev = tabla.getSelectionModel().getSelectedItem();
         if (ev == null) return;
-
         controladorEventos.eliminarEvento(ev.getNombre());
         refrescar.run();
     });
 
-    // Ensamblar
+    // Contenedor tabs
+    VBox contenedorTabs = new VBox();
+    contenedorTabs.setPadding(new Insets(20));
+    contenedorTabs.getChildren().add(new Label("Seleccione un evento para ver detalles."));
+
+    // Mostrar tabs al seleccionar
+    tabla.getSelectionModel().selectedItemProperty().addListener((obs, old, ev) -> {
+        if (ev != null) contenedorTabs.getChildren().setAll(crearTabsEvento(ev));
+    });
+
+    VBox arriba = new VBox(20, titulo, tabla, form);
+    arriba.setPadding(new Insets(20));
+
+    SplitPane split = new SplitPane();
+    split.setOrientation(javafx.geometry.Orientation.VERTICAL);
+    split.getItems().addAll(arriba, contenedorTabs);
+    split.setDividerPositions(0.45); // 45% arriba, 55% abajo
+
+    layoutPrincipal.setCenter(split);
+
+}
+
+// Tabs del evento
+private TabPane crearTabsEvento(Evento ev) {
+
+    TabPane tabs = new TabPane();
+
+    Tab t1 = new Tab("Info", crearTabInfo(ev));
+    Tab t2 = new Tab("Participantes", crearTabParticipantes(ev));
+    Tab t3 = new Tab("Partidos", crearTabPartidos(ev));
+    Tab t4 = new Tab("Resultados", crearTabResultados(ev));
+    Tab t5 = new Tab("Clasificación", crearTabBST(ev));
+    Tab t6 = new Tab("Grafo", crearTabGrafo(ev));
+
+    t1.setClosable(false);
+    t2.setClosable(false);
+    t3.setClosable(false);
+    t4.setClosable(false);
+    t5.setClosable(false);
+    t6.setClosable(false);
+
+    tabs.getTabs().addAll(t1, t2, t3, t4, t5, t6);
+
+    tabs.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+    if (newTab.getText().equals("Partidos")) {
+        newTab.setContent(crearTabPartidos(ev));
+    }
+});
+
+    return tabs;
+}
+
+// Tab info
+private VBox crearTabInfo(Evento ev) {
+    VBox v = new VBox(new Label("Información del evento"));
+    v.setPadding(new Insets(20));
+    return v;
+}
+
+    // Tab Participantes del evento
+    private VBox crearTabParticipantes(Evento ev) {
+
+    VBox panel = new VBox(20);
+    panel.setPadding(new Insets(20));
+
+    Label titulo = new Label("Participantes del Evento");
+    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+
+    // lista visual
+    ListView<HBox> listaVisual = new ListView<>();
+    listaVisual.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
+
+    ListaParticipantes lista = ev.getParticipantes();
+    System.out.println("Evento en Participantes => " + ev);
+
+
+    // refrescar lista
+    Runnable refrescar = () -> {
+        listaVisual.getItems().clear();
+        NodoParticipante actual = lista.getCabeza();
+        while (actual != null) {
+            listaVisual.getItems().add(crearItemVisual(actual.getDato(), ""));
+            actual = actual.getSiguiente();
+        }
+    };
+    refrescar.run();
+
+    // formulario agregar
+    TextField txtNombre = new TextField();
+    txtNombre.setPromptText("Nombre");
+
+    TextField txtEquipo = new TextField();
+    txtEquipo.setPromptText("Equipo");
+
+    TextField txtRol = new TextField();
+    txtRol.setPromptText("Rol");
+
+    TextField txtEstado = new TextField();
+    txtEstado.setPromptText("Estado");
+
+    Button btnAgregar = new Button("Agregar");
+
+    btnAgregar.setOnAction(e -> {
+        String n = txtNombre.getText().trim();
+        String eq = txtEquipo.getText().trim();
+        String rol = txtRol.getText().trim();
+        String est = txtEstado.getText().trim();
+
+        if (n.isEmpty() || eq.isEmpty() || rol.isEmpty() || est.isEmpty())
+            return;
+
+        Participante nuevo = new Participante(n, eq, rol, est);
+        lista.agregar(nuevo);
+
+        refrescar.run();
+
+        txtNombre.clear();
+        txtEquipo.clear();
+        txtRol.clear();
+        txtEstado.clear();
+
+        System.out.println("Participantes REALES en el evento:");
+        NodoParticipante np = lista.getCabeza();
+        while (np != null) {
+        System.out.println(" - " + np.getDato().getNombre() + " | equipo: " + np.getDato().getEquipo());
+        np = np.getSiguiente();
+}
+
+    });
+
+    HBox formAgregar = new HBox(10, txtNombre, txtEquipo, txtRol, txtEstado, btnAgregar);
+
+    // buscar recursivo
+    TextField txtBuscar = new TextField();
+    txtBuscar.setPromptText("Buscar participante...");
+
+    txtBuscar.textProperty().addListener((obs, oldValue, newValue) -> {
+        listaVisual.getItems().clear();
+
+        if (newValue == null || newValue.isEmpty()) {
+            refrescar.run();
+            return;
+        }
+
+        java.util.List<Participante> encontrados = new java.util.ArrayList<>();
+        lista.buscarRecursivoContiene(lista.getCabeza(), newValue, encontrados);
+
+        for (Participante p : encontrados) {
+            listaVisual.getItems().add(crearItemVisual(p, newValue));
+        }
+    });
+
+    // eliminar participante
+    Button btnEliminar = new Button("Eliminar");
+    btnEliminar.setOnAction(e -> {
+        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
+        if (seleccionado != null && seleccionado.getUserData() instanceof Participante) {
+            Participante p = (Participante) seleccionado.getUserData();
+            lista.eliminarPorNombre(p.getNombre());
+            refrescar.run();
+        }
+    });
+
+    HBox acciones = new HBox(10, btnEliminar);
+
     panel.getChildren().addAll(
-            titulo,
-            tabla,
-            form
+        titulo,
+        listaVisual,
+        new Label("Agregar nuevo participante:"),
+        formAgregar,
+        new Label("Buscar participante:"),
+        txtBuscar,
+        new Label("Acciones:"),
+        acciones
     );
 
-    layoutPrincipal.setCenter(panel);
+    return panel;
+}
+
+
+// Tab Partidos del evento (cola + pila)
+private VBox crearTabPartidos(Evento ev) {
+
+    VBox panel = new VBox(20);
+    panel.setPadding(new Insets(20));
+
+    Label titulo = new Label("Partidos del Evento");
+    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+
+    // generar equipos desde participantes
+    java.util.Set<String> equipos = new java.util.HashSet<>();
+    NodoParticipante nodo = ev.getParticipantes().getCabeza();
+    System.out.println("Evento en Partidos => " + ev);
+    while (nodo != null) {
+        equipos.add(nodo.getDato().getEquipo());
+        nodo = nodo.getSiguiente();
+    }
+
+    ComboBox<String> cbA = new ComboBox<>();
+    ComboBox<String> cbB = new ComboBox<>();
+    cbA.getItems().addAll(equipos);
+    cbB.getItems().addAll(equipos);
+    cbA.setPromptText("Equipo A");
+    cbB.setPromptText("Equipo B");
+
+    DatePicker fecha = new DatePicker();
+    fecha.setPromptText("Fecha");
+
+    TextField txtLugar = new TextField();
+    txtLugar.setPromptText("Lugar");
+
+    Button btnAgregar = new Button("Agregar Partido");
+
+    HBox form = new HBox(10, cbA, cbB, fecha, txtLugar, btnAgregar);
+
+    // lista visual para la cola
+    ListView<String> lista = new ListView<>();
+
+    Runnable refrescar = () -> {
+        lista.getItems().clear();
+        NodoPartido act = ev.getColaPartidos().getFrente();
+        while (act != null) {
+            lista.getItems().add(act.getPartido().toString());
+            act = act.getSiguiente();
+        }
+    };
+    refrescar.run();
+
+    // agregar partido
+    btnAgregar.setOnAction(e -> {
+        String a = cbA.getValue();
+        String b = cbB.getValue();
+        LocalDate f = fecha.getValue();
+        String l = txtLugar.getText();
+
+        if (a == null || b == null || f == null || l.isEmpty()) return;
+        if (a.equals(b)) return;
+
+        Equipo ea = new Equipo(a);
+        Equipo eb = new Equipo(b);
+
+        Partido p = new Partido(ea, eb, f, l);
+        ev.getColaPartidos().encolar(p);
+
+        refrescar.run();
+
+        cbA.setValue(null);
+        cbB.setValue(null);
+        fecha.setValue(null);
+        txtLugar.clear();
+    });
+
+    // marcar como jugado
+    Button btnJugar = new Button("Marcar como jugado");
+
+    btnJugar.setOnAction(e -> {
+        Partido p = ev.getColaPartidos().desencolar();
+        if (p == null) return;
+
+        TextInputDialog d = new TextInputDialog();
+        d.setTitle("Resultado");
+        d.setHeaderText("Marcador (ejemplo: 2-1)");
+        d.setContentText("Ingrese resultado:");
+        String entrada = d.showAndWait().orElse(null);
+
+        if (entrada == null || !entrada.contains("-")) return;
+
+        try {
+            String[] x = entrada.split("-");
+            int ga = Integer.parseInt(x[0].trim());
+            int gb = Integer.parseInt(x[1].trim());
+
+            Resultado r = new Resultado(p, ga, gb);
+            ev.getPilaResultados().apilar(r);
+
+            refrescar.run();
+        } catch (Exception ex) {
+            return;
+        }
+    });
+
+    panel.getChildren().addAll(
+        titulo,
+        form,
+        new Label("Partidos pendientes:"),
+        lista,
+        btnJugar
+    );
+
+    return panel;
+}
+
+
+// Tab resultados
+private VBox crearTabResultados(Evento ev) {
+    VBox v = new VBox(new Label("Resultados del evento"));
+    v.setPadding(new Insets(20));
+    return v;
+}
+
+// Tab clasificación
+private VBox crearTabBST(Evento ev) {
+    VBox v = new VBox(new Label("Clasificación (BST)"));
+    v.setPadding(new Insets(20));
+    return v;
+}
+
+// Tab grafo
+private VBox crearTabGrafo(Evento ev) {
+    VBox v = new VBox(new Label("Grafo de enfrentamientos"));
+    v.setPadding(new Insets(20));
+    return v;
 }
 
 
@@ -522,135 +817,85 @@ public class VistaDashboard {
         layoutPrincipal.setCenter(panel);
     }
     
+    // Pantalla Participantes (global)
     private void mostrarPantallaParticipantes() {
+
     VBox panel = new VBox(20);
     panel.setPadding(new Insets(30));
     panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
 
-    Label titulo = new Label("Participantes Registrados");
+    Label titulo = new Label("Todos los Participantes (Todos los Eventos)");
     titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
     titulo.setStyle("-fx-text-fill: #2c3e50;");
 
     ListView<HBox> listaVisual = new ListView<>();
-    listaVisual.setStyle("-fx-background-color: white; -fx-background-radius: 5; "
-            + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);");
+    listaVisual.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
 
-    ListaParticipantes participantes = servicioDatos.obtenerListaParticipantesPrueba();
+    // lista global de participantes
+    ListaParticipantes participantesGlobales = new ListaParticipantes();
 
-    // Método auxiliar para refrescar lista en orden normal
-    Runnable refrescarLista = () -> {
+    // construir lista global desde todos los eventos
+    NodoEvento ne = listaEventos.getCabeza();
+    while (ne != null) {
+        ListaParticipantes lp = ne.getDato().getParticipantes();
+        NodoParticipante np = lp.getCabeza();
+        while (np != null) {
+            participantesGlobales.agregar(np.getDato());
+            np = np.getSiguiente();
+        }
+        ne = ne.getSiguiente();
+    }
+
+    // refrescar
+    Runnable refrescar = () -> {
         listaVisual.getItems().clear();
-        NodoParticipante actual = participantes.getCabeza();
+        NodoParticipante actual = participantesGlobales.getCabeza();
         while (actual != null) {
-            Participante p = actual.getDato();
-            listaVisual.getItems().add(crearItemVisual(p, ""));
+            listaVisual.getItems().add(crearItemVisual(actual.getDato(), ""));
             actual = actual.getSiguiente();
         }
     };
-    refrescarLista.run();
+    refrescar.run();
 
-    // --- FORMULARIO AGREGAR ---
-    TextField txtNombre = new TextField(); txtNombre.setPromptText("Nombre");
-    TextField txtEquipo = new TextField(); txtEquipo.setPromptText("Equipo");
-    TextField txtRol = new TextField(); txtRol.setPromptText("Rol");
-    TextField txtEstado = new TextField(); txtEstado.setPromptText("Estado");
+    // búsqueda recursiva global
+    TextField txtBuscar = new TextField();
+    txtBuscar.setPromptText("Buscar participante...");
 
-    Button btnAgregar = new Button("Agregar Participante");
-    btnAgregar.setOnAction(e -> {
-        Participante nuevo = new Participante(
-            txtNombre.getText(), txtEquipo.getText(), txtRol.getText(), txtEstado.getText()
-        );
-        participantes.agregar(nuevo);
-        refrescarLista.run();
-        txtNombre.clear(); txtEquipo.clear(); txtRol.clear(); txtEstado.clear();
-    });
-    HBox formularioAgregar = new HBox(10, txtNombre, txtEquipo, txtRol, txtEstado, btnAgregar);
-
-    // --- BUSCAR / FILTRAR DINÁMICO ---
-    TextField txtBuscar = new TextField(); txtBuscar.setPromptText("Buscar participante...");
     txtBuscar.textProperty().addListener((obs, oldValue, newValue) -> {
         listaVisual.getItems().clear();
+
         if (newValue == null || newValue.isEmpty()) {
-            refrescarLista.run();
-        } else {
-            NodoParticipante actual = participantes.getCabeza();
-            while (actual != null) {
-                Participante p = actual.getDato();
-                if (p.getNombre().toLowerCase().contains(newValue.toLowerCase())) {
-                    listaVisual.getItems().add(crearItemVisual(p, newValue));
-                }
-                actual = actual.getSiguiente();
-            }
+            refrescar.run();
+            return;
+        }
+
+        java.util.List<Participante> encontrados = new java.util.ArrayList<>();
+        participantesGlobales.buscarRecursivoContiene(participantesGlobales.getCabeza(), newValue, encontrados);
+
+        for (Participante p : encontrados) {
+            listaVisual.getItems().add(crearItemVisual(p, newValue));
         }
     });
 
-    // --- ACCIONES AL SELECCIONAR ---
-    Button btnEliminarSeleccionado = new Button("Eliminar Seleccionado");
-    Button btnCambiarEstado = new Button("Cambiar Estado Seleccionado");
-
-    btnEliminarSeleccionado.setOnAction(e -> {
-        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
-        if (seleccionado != null && seleccionado.getUserData() instanceof Participante) {
-            Participante p = (Participante) seleccionado.getUserData();
-            boolean ok = participantes.eliminarPorNombre(p.getNombre());
-            if (ok) refrescarLista.run();
-        }
-    });
-
-    btnCambiarEstado.setOnAction(e -> {
-        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
-        if (seleccionado != null && seleccionado.getUserData() instanceof Participante) {
-            Participante p = (Participante) seleccionado.getUserData();
-            String nuevoEstado = "Activo".equalsIgnoreCase(p.getEstado()) ? "Inactivo" : "Activo";
-            participantes.cambiarEstado(p.getNombre(), nuevoEstado);
-            refrescarLista.run();
-        }
-    });
-
-    HBox accionesSeleccion = new HBox(10, btnEliminarSeleccionado, btnCambiarEstado);
-
-    // --- RECORRER LISTA ---
-    Button btnRecorrerAtras = new Button("Recorrer desde la cola");
-    btnRecorrerAtras.setOnAction(e -> {
-        listaVisual.getItems().clear();
-        NodoParticipante nodo = participantes.getCola();
-        while (nodo != null) {
-            Participante p = nodo.getDato();
-            listaVisual.getItems().add(crearItemVisual(p, ""));
-            nodo = nodo.getAnterior();
-        }
-    });
-
-    Button btnRecorrerCabeza = new Button("Recorrer desde la cabeza");
-    btnRecorrerCabeza.setOnAction(e -> refrescarLista.run());
-
-    HBox accionesRecorrer = new HBox(10, btnRecorrerAtras, btnRecorrerCabeza);
-
-    // --- ARMAMOS EL PANEL ---
     panel.getChildren().addAll(
         titulo,
         listaVisual,
-        new Label("Agregar nuevo participante:"),
-        formularioAgregar,
-        new Label("Buscar participante (coincidencia parcial, resaltado):"),
-        txtBuscar,
-        new Label("Acciones sobre selección:"),
-        accionesSeleccion,
-        new Label("Recorrer lista:"),
-        accionesRecorrer
+        new Label("Buscar:"),
+        txtBuscar
     );
 
     layoutPrincipal.setCenter(panel);
 }
 
-// Método auxiliar para crear ítem visual con resaltado y vínculo al objeto
-private HBox crearItemVisual(Participante p, String highlight) {
+    // ítem visual participante
+    private HBox crearItemVisual(Participante p, String highlight) {
+
     HBox box = new HBox(5);
 
-    TextFlow tfNombre;
     String nombre = p.getNombre();
+    TextFlow tfNombre;
 
-    if (highlight != null && !highlight.isEmpty() && nombre.toLowerCase().contains(highlight.toLowerCase())) {
+    if (!highlight.isEmpty() && nombre.toLowerCase().contains(highlight.toLowerCase())) {
         int start = nombre.toLowerCase().indexOf(highlight.toLowerCase());
         int end = start + highlight.length();
 
@@ -671,10 +916,10 @@ private HBox crearItemVisual(Participante p, String highlight) {
 
     box.getChildren().addAll(tfNombre, lblEquipo, lblRol, lblEstado);
 
-    // Guardamos el objeto participante en el ítem para accederlo al seleccionar
     box.setUserData(p);
 
     return box;
 }
+
 
 }

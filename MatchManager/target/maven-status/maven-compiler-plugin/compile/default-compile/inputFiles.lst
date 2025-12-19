@@ -1,7 +1,20 @@
-C:\Users\josec\Downloads\avance2 (1)\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Usuario.java
-C:\Users\josec\Downloads\avance2 (1)\MatchManager\src\main\java\com\fidelitas\matchmanager\vista\VistaLogin.java
-C:\Users\josec\Downloads\avance2 (1)\MatchManager\src\main\java\com\fidelitas\matchmanager\controlador\ServicioDatosSimulados.java
-C:\Users\josec\Downloads\avance2 (1)\MatchManager\src\main\java\com\fidelitas\matchmanager\App.java
-C:\Users\josec\Downloads\avance2 (1)\MatchManager\src\main\java\com\fidelitas\matchmanager\Main.java
-C:\Users\josec\Downloads\avance2 (1)\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Evento.java
-C:\Users\josec\Downloads\avance2 (1)\MatchManager\src\main\java\com\fidelitas\matchmanager\vista\VistaDashboard.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\NodoEvento.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Partido.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\NodoParticipante.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\NodoResultado.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Equipo.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\Main.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\PilaResultados.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Resultado.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\ColaPartidos.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Usuario.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\ListaEventos.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Participante.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\Evento.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\controlador\ControladorEventos.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\App.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\vista\VistaLogin.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\vista\VistaDashboard.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\NodoPartido.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\controlador\ServicioDatosSimulados.java
+C:\Users\JoseEduardoCorderoAr\OneDrive - IBM\Documents\SC-304_Proyecto\MatchManager\src\main\java\com\fidelitas\matchmanager\modelo\ListaParticipantes.java
