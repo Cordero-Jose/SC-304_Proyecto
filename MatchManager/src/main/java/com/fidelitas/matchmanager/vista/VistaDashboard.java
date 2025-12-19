@@ -19,6 +19,7 @@ import com.fidelitas.matchmanager.modelo.ListaParticipantes; // nodo evento
 import com.fidelitas.matchmanager.modelo.NodoEvento; // participante
 import com.fidelitas.matchmanager.modelo.NodoParticipante; // lista doble participantes
 import com.fidelitas.matchmanager.modelo.NodoPartido;
+import com.fidelitas.matchmanager.modelo.NodoResultado;
 import com.fidelitas.matchmanager.modelo.Participante; // nodo participante
 import com.fidelitas.matchmanager.modelo.Partido;
 import com.fidelitas.matchmanager.modelo.Resultado;
@@ -498,7 +499,12 @@ private TabPane crearTabsEvento(Evento ev) {
     if (newTab.getText().equals("Partidos")) {
         newTab.setContent(crearTabPartidos(ev));
     }
+
+    if (newTab.getText().equals("Resultados")) {
+        newTab.setContent(crearTabResultados(ev));
+    }
 });
+
 
     return tabs;
 }
@@ -744,12 +750,52 @@ private VBox crearTabPartidos(Evento ev) {
 }
 
 
-// Tab resultados
+// Tab Resultados del evento (pila LIFO)
 private VBox crearTabResultados(Evento ev) {
-    VBox v = new VBox(new Label("Resultados del evento"));
-    v.setPadding(new Insets(20));
-    return v;
+
+    VBox panel = new VBox(20);
+    panel.setPadding(new Insets(20));
+
+    Label titulo = new Label("Resultados del Evento");
+    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+
+    ListView<String> listaResultados = new ListView<>();
+    listaResultados.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
+
+    // refrescar pila
+    Runnable refrescar = () -> {
+        listaResultados.getItems().clear();
+
+        NodoResultado nodo = ev.getPilaResultados().getCima();
+        while (nodo != null) {
+            Resultado r = nodo.getResultado();
+
+            String linea = 
+                r.getPartido().getEquipoA().getNombre() + " " + r.getGolesA() +
+                " - " +
+                r.getGolesB() + " " + r.getPartido().getEquipoB().getNombre();
+
+            listaResultados.getItems().add(linea);
+
+            nodo = nodo.getSiguiente();
+        }
+    };
+
+    refrescar.run();
+
+    // botón refrescar manual
+    Button btnRefrescar = new Button("Actualizar");
+    btnRefrescar.setOnAction(e -> refrescar.run());
+
+    panel.getChildren().addAll(
+        titulo,
+        listaResultados,
+        btnRefrescar
+    );
+
+    return panel;
 }
+
 
 // Tab clasificación
 private VBox crearTabBST(Evento ev) {
