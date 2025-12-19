@@ -114,4 +114,11 @@ public class ListaEventos {
     public NodoEvento getCabeza() {
         return cabeza;
     }
+
+    // reemplazar el contenido de la lista actual con otra lista
+    public void copiarDesde(ListaEventos otra) {
+    this.cabeza = otra.cabeza;
+    this.tamaño = otra.tamaño;
+}
+
 }

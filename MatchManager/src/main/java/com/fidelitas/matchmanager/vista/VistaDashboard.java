@@ -1,1076 +1,154 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.fidelitas.matchmanager.vista;
 
-// --- Importaciones Clave ---
-// Importamos nuestra "base de datos de mentira". La vamos a necesitar
-// muchísimo en esta ventana para rellenar las tablas y listas.
-// --- Java estándar ---
-import java.time.LocalDate; // fechas
+import com.fidelitas.matchmanager.controlador.Persistencia;
+import com.fidelitas.matchmanager.modelo.ListaEventos;
+import com.fidelitas.matchmanager.modelo.NodoEvento;
+import com.fidelitas.matchmanager.modelo.Usuario;
 
-import com.fidelitas.matchmanager.controlador.ControladorEventos; // controlador eventos
-import com.fidelitas.matchmanager.controlador.ServicioDatosSimulados; // datos de prueba
-import com.fidelitas.matchmanager.modelo.Equipo;
-import com.fidelitas.matchmanager.modelo.Evento; // evento
-import com.fidelitas.matchmanager.modelo.ListaEventos; // lista enlazada simple eventos
-import com.fidelitas.matchmanager.modelo.ListaParticipantes; // nodo evento
-import com.fidelitas.matchmanager.modelo.NodoEvento; // participante
-import com.fidelitas.matchmanager.modelo.NodoParticipante; // lista doble participantes
-import com.fidelitas.matchmanager.modelo.NodoPartido;
-import com.fidelitas.matchmanager.modelo.NodoResultado;
-import com.fidelitas.matchmanager.modelo.Participante; // nodo participante
-import com.fidelitas.matchmanager.modelo.Partido;
-import com.fidelitas.matchmanager.modelo.Resultado;
-import com.fidelitas.matchmanager.modelo.Usuario; // usuario
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
-import javafx.geometry.Insets; // equipo
-import javafx.geometry.Pos; // partido
-import javafx.scene.Scene; // cola partidos
-import javafx.scene.control.Button; // nodo partido
-import javafx.scene.control.ComboBox; // resultado
-import javafx.scene.control.DatePicker; // nodo resultado
-import javafx.scene.control.Label; // padding
-import javafx.scene.control.ListView; // alineación
-import javafx.scene.control.Separator; // escena
-import javafx.scene.control.SplitPane; // botón
-import javafx.scene.control.Tab; // combo equipos
-import javafx.scene.control.TabPane; // selector fecha
-import javafx.scene.control.TableColumn; // etiqueta
-import javafx.scene.control.TableView; // lista visual
-import javafx.scene.control.TextField; // separador
-import javafx.scene.control.TextInputDialog;
-import javafx.scene.control.cell.PropertyValueFactory; // columna tabla
-import javafx.scene.layout.BorderPane; // tabla
-import javafx.scene.layout.GridPane; // campo texto
-import javafx.scene.layout.HBox; // diálogo resultado
-import javafx.scene.layout.VBox; // enlace columnas
-import javafx.scene.paint.Color; // contenedor pestañas
-import javafx.scene.text.Font; // pestaña
-import javafx.scene.text.FontWeight; // contenedor principal
-import javafx.scene.text.Text; // grid
-import javafx.scene.text.TextFlow; // fila
-import javafx.stage.Stage; // divisor vertical
-
-
-
-
-
-/**
- * La clase VistaDashboard es básicamente la ventana principal que ve el usuario después de iniciar sesión. 
- * Es como el “escritorio” desde donde puede acceder a todo lo demás dentro del sistema
- * 
- * Para armar esta pantalla, la clase usa un BorderPane, que es un tipo de diseño que divide la interfaz en 
- * cinco partes: arriba, abajo, izquierda, derecha y el centro
- * 
- * la parte izquierda se usa para colocar el menú lateral, donde están los botones para navegar. 
- * Mientras tanto, la parte del centro es donde se van mostrando las diferentes pantallas del sistema, como el resumen, los usuarios o los eventos.
- */
 public class VistaDashboard {
 
-    // El 'Stage' es la ventana principal. La guardamos aquí
-    // porque la 'VistaLogin' nos la pasó.
-    // es para poder cerrar sesión y volver a mostrar el login.
     private final Stage stage;
-    
-    // es el principal que tendrá el menú a la izquierda y el contenido al centro.
+    private final Usuario usuarioActual;
+
     private final BorderPane layoutPrincipal;
-    
-    private final ServicioDatosSimulados servicioDatos;
 
-    // Eventos (lista real y su controlador)
-    private final ListaEventos listaEventos = new ListaEventos();
-    private final ControladorEventos controladorEventos = new ControladorEventos(listaEventos);
+    private final ListaEventos listaEventos;  // lista cargada desde Persistencia
 
+    private final String COLOR_MENU = "#2c3e50";
 
-    // Definición de Colores:
-    // Definimos los colores aquí como "constantes" (final String).
-    // Si el día de mañana queremos cambiar
-    // el azul del menú por un verde, solo lo cambiamos aquí
-    // y se arregla en toda la ventana, en lugar de buscarlo
-    // línea por línea.
-    private final String COLOR_MENU_FONDO = "#2c3e50"; // azul oscuro
-    private final String COLOR_FONDO_GENERAL = "#f4f6f8"; // gris muy claro
-    // Este es un estilo CSS (como de página web) 
-    private final String ESTILO_CARD = "-fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2); -fx-padding: 20;";
-
-    /**
-     * @param stage La ventana principal (Stage) que nos pasa la vista anterior.
-     */
-    public VistaDashboard(Stage stage) {
-        // "this.stage" (el de la clase) = "stage" (el que nos pasaron)
+    public VistaDashboard(Stage stage, Usuario usuarioActual) {
         this.stage = stage;
-        
-        // Creamos la "base de datos falsa" y la dejamos lista para usar.
-        this.servicioDatos = new ServicioDatosSimulados();
-        
-        // Creamos el BorderPane que va a contener todo.
+        this.usuarioActual = usuarioActual;
         this.layoutPrincipal = new BorderPane();
+        
+
+        // Cargar datos reales una sola vez
+        this.listaEventos = Persistencia.cargar();
+        System.out.println("****************************");
+        System.out.println("EVENTOS CARGADOS DESDE JSON:");
+        System.out.println("Cantidad: " + listaEventos.getTamaño());
+
+        NodoEvento n = listaEventos.getCabeza();
+        while (n != null) {
+    System.out.println(" - " + n.getDato().getNombre());
+    n = n.getSiguiente();
+}
+System.out.println("****************************");
+
     }
 
-    /**
-     * MÉTODO: mostrar()
-     * Este es el método que "dibuja" todo.
-     * Configura el menú, pone la pantalla de inicio por defecto
-     * y le dice a la ventana (stage) que muestre esta nueva "escena"
-     */
     public void mostrar() {
-    // MENÚ LATERAL:
-    // 'VBox' es un contenedor que apila las cosas verticalmente.
-    // El '10' es el espacio (en píxeles) que habrá entre cada botón.
-    VBox menuLateral = new VBox(10);
-    menuLateral.setPrefWidth(250); // ancho fijo de 250px.
-    menuLateral.setPadding(new Insets(20, 0, 0, 0)); // Margen: 20 arriba, 0 lo demás.
-    menuLateral.setStyle("-fx-background-color: " + COLOR_MENU_FONDO + ";"); // color azul oscuro.
 
-    // este es el logo
-    Label lblLogo = new Label("Match Manager");
-    lblLogo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20)); // Letra grande y negrita
-    lblLogo.setStyle("-fx-text-fill: white; -fx-padding: 0 0 20 20;"); // Letra blanca y un margen
+        // ----- MENÚ -----
+        VBox menu = new VBox(10);
+        menu.setPrefWidth(250);
+        menu.setPadding(new Insets(20));
+        menu.setStyle("-fx-background-color: " + COLOR_MENU);
 
-    // Creamos los botones del menú usando 'crearBotonMenu' (está más abajo).
-    Button btnInicio = crearBotonMenu("Dashboard / Resumen");
-    Button btnEventos = crearBotonMenu("Eventos");
-    Button btnUsuarios = crearBotonMenu("Usuarios");
-    Button btnParticipantes = crearBotonMenu("Participantes"); // 👈 nuevo botón
-    Button btnAjustes = crearBotonMenu("Ajustes");
-    Button btnSalir = crearBotonMenu("Cerrar Sesión");
+        Label lblLogo = new Label("Match Manager");
+        lblLogo.setStyle("-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;");
 
-    // NAVEGACIÓN:
-    // 'setOnAction' es un "listener"
-    // ejecuta el código que está después de la flechita (->).
-    btnInicio.setOnAction(e -> mostrarPantallaInicio());
-    btnEventos.setOnAction(e -> mostrarPantallaEventos());
-    btnUsuarios.setOnAction(e -> mostrarPantallaUsuarios());
-    btnParticipantes.setOnAction(e -> mostrarPantallaParticipantes()); // 👈 conecta al método
-    btnAjustes.setOnAction(e -> mostrarPantallaAjustes());
+        Button btnInicio = crearBoton("Dashboard / Resumen");
+        Button btnEventos = crearBoton("Eventos");
+        Button btnParticipantes = crearBoton("Participantes");
+        Button btnPartidos = crearBoton("Partidos");
+        Button btnResultados = crearBoton("Resultados");
+        Button btnClasificacion = crearBoton("Clasificación");
+        Button btnGrafo = crearBoton("Grafo");
+        Button btnAjustes = crearBoton("Ajustes");
+        Button btnSalir = crearBoton("Cerrar Sesión");
 
-    // OJO:
-    // Cuando le damos "Cerrar Sesión", lo que hace es
-    // 1. Crear una *nueva* instancia de 'VistaLogin'.
-    // 2. Le pasa el 'stage' (la MISMA ventana que estamos usando).
-    // 3. Llama a 'login.mostrar()'.
-    // 'VistaLogin' se va a encargar de poner su escena
-    // en *nuestro* 'stage', reemplazando el dashboard por el login.
-    btnSalir.setOnAction(e -> new VistaLogin(stage).mostrar());
+        // --------- ROLES (R2) ---------
+        if (usuarioActual.getRol().equalsIgnoreCase("Espectador")) {
 
-    // 'new Separator()' es solo la rayita gris que separa los botones.
-    // Añadimos todo al 'menuLateral' 
-    menuLateral.getChildren().addAll(
-        lblLogo,
-        btnInicio,
-        btnEventos,
-        btnUsuarios,
-        btnParticipantes, // 👈 agregado aquí
-        btnAjustes,
-        new Separator(),
-        btnSalir
-    );
+            // Es espectador → solo puede ver datos, no editar nada
 
-    // "Pone el 'menuLateral' que acabamos de crear en la zona izquierda".
-    layoutPrincipal.setLeft(menuLateral);
+            btnAjustes.setVisible(false);     // NO ver Ajustes
+            btnPartidos.setVisible(false);    // NO ver Partidos (admin-only)
+            // NOTA:
+            // Eventos, Participantes, Resultados, Clasificación y Grafo
+            // deben estar visibles porque son consulta.
+        }
 
-    mostrarPantallaInicio();
-    Scene scene = new Scene(layoutPrincipal, 1200, 800);
-    stage.setScene(scene);
-    stage.setTitle("Match Manager - Panel Principal");
-    stage.centerOnScreen(); // Centramos la ventana en el monitor.
+        // -------- ACCIONES DEL MENÚ --------
 
-    }
+        btnInicio.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaInicio().render()));
 
-    /**
-     * MÉTODO: crearBotonMenu
-     * @param texto El texto que va a llevar el botón.
-     * @return Un objeto 'Button' ya estilizado 
-     */
-    private Button crearBotonMenu(String texto) {
-        Button btn = new Button(texto);
-        btn.setMaxWidth(Double.MAX_VALUE); // Hace que el botón se estire al ancho del menú (250px)
-        btn.setAlignment(Pos.BASELINE_LEFT); // Alinea el texto a la izquierda
-        btn.setPadding(new Insets(10, 10, 10, 20)); // Margen interno
-        btn.setFont(Font.font("Segoe UI", 14)); // Tipo de letra
-        
-        // Estilo normal: fondo transparente, letra gris
-        String estiloNormal = "-fx-background-color: transparent; -fx-text-fill: #ecf0f1; -fx-cursor: hand;";
-        // Estilo hover: fondo azul más claro, letra blanca
-        String estiloHover = "-fx-background-color: #34495e; -fx-text-fill: white; -fx-cursor: hand;";
-        
-        btn.setStyle(estiloNormal); // Le ponemos el estilo normal al empezar.
+        btnEventos.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaEventos(listaEventos, usuarioActual).render()));
 
-        // "Cuando el mouse ENTRE en el área del botón..."
-        btn.setOnMouseEntered(e -> btn.setStyle(estiloHover));
-        // "Cuando el mouse SALGA del área del botón..."
-        btn.setOnMouseExited(e -> btn.setStyle(estiloNormal));
-        
-        return btn; // Devolvemos el botón ya configurado.
-    }
+        btnParticipantes.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaParticipantes(listaEventos, usuarioActual).render()));
 
-    private void mostrarPantallaInicio() {
-        // 'VBox' para apilar verticalmente: Título, Fila de Tarjetas, Noticias
-        VBox panel = new VBox(20); // 20px de espacio entre elementos
-        panel.setPadding(new Insets(30)); // 30px de margen por todos lados
-        panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";"); // Fondo gris claro
+        btnPartidos.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaPartidos(listaEventos, usuarioActual).render()));
 
-        Label titulo = new Label("Resumen General");
-        titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
-        titulo.setStyle("-fx-text-fill: #2c3e50;");
+        btnResultados.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaResultados(listaEventos).render()));
 
-        // 'HBox' (Caja Horizontal) para poner las tarjetas una al lado de la otra.
-        HBox filaCards = new HBox(20); // 20px de espacio entre tarjetas
-        filaCards.getChildren().addAll(
-            // Llamamos a nuestro "ayudante" 'crearCard' varias veces.
-            // Todos estos datos son "harcodeados" (falsos), solo para la demo.
-            crearCard("Eventos Activos", "12"),
-            crearCard("Equipos Registrados", "48"),
-            crearCard("Partidos esta semana", "27"),
-            crearCard("Nuevos Usuarios", "5")
-        );
+        btnClasificacion.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaClasificacion(listaEventos).render()));
 
-        // Sección de "Noticias" (más datos falsos)
-        Label lblNoticias = new Label("Noticias Internas");
-        lblNoticias.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-        lblNoticias.setStyle("-fx-text-fill: #2c3e50;");
-        
-        VBox noticiasBox = new VBox(10);
-        noticiasBox.setStyle(ESTILO_CARD); // Reutilizamos el estilo de tarjeta blanca con sombra
-        noticiasBox.getChildren().addAll(
-            new Label("• Se ha actualizado el módulo de reportes."),
-            new Label("• Nueva vista de calendario disponible."),
-            new Label("• Próxima capacitación: Nov 2025.")
-        );
+        btnGrafo.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaGrafo(listaEventos).render()));
 
-        // Metemos todo en el panel vertical
-        panel.getChildren().addAll(titulo, filaCards, new Separator(), lblNoticias, noticiasBox);
-        
-        // "Pone este 'panel' que acabamos de crear en tu zona del centro".
-        layoutPrincipal.setCenter(panel);
-    }
+        btnAjustes.setOnAction(e ->
+                layoutPrincipal.setCenter(new VistaAjustes(listaEventos, usuarioActual).render()));
 
-    /**
-     * MÉTODO: crearCard 
-     * Crea una de las tarjetas blancas (VBox) con el número grande
-     * y el título pequeño.
-     *
-     * @param titulo El texto de abajo
-     * @param numero El texto grande de arriba
-     * @return Una 'VBox' estilizada 
-     */
-    private VBox crearCard(String titulo, String numero) {
-        VBox card = new VBox(10); // Caja vertical para el número y el título
-        card.setMinWidth(200); // Ancho mínimo
-        card.setStyle(ESTILO_CARD); // Reutilizamos el estilo de tarjeta blanca
-        
-        Label lblNum = new Label(numero);
-        lblNum.setFont(Font.font("Segoe UI", FontWeight.BOLD, 36)); // Número grande
-        lblNum.setStyle("-fx-text-fill: #2c3e50;");
-        
-        Label lblTit = new Label(titulo);
-        lblTit.setFont(Font.font("Segoe UI", 14)); // Título pequeño
-        lblTit.setStyle("-fx-text-fill: #7f8c8d;"); // Color gris
-        
-        card.getChildren().addAll(lblNum, lblTit);
-        return card;
-    }
-
-    /**
-     * MÉTODO: mostrarPantallaUsuarios()
-     * "Dibuja" la pantalla de gestión de usuarios (la de la tabla)
-     * y la pone en el CENTRO del 'layoutPrincipal'.
-     */
-    private void mostrarPantallaUsuarios() {
-        VBox panel = new VBox(20);
-        panel.setPadding(new Insets(30));
-        panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
-
-        Label titulo = new Label("Gestión de Usuarios");
-        titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
-        titulo.setStyle("-fx-text-fill: #2c3e50;");
-
-        // 1. CREACIÓN DE LA TABLA
-        TableView<Usuario> tabla = new TableView<>();
-        // Esta hace que las columnas se ajusten al ancho de la tabla
-        // y no aparezca una barra de scroll horizontal.
-        tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tabla.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);");
-        
-        // 2. CREACIÓN DE LAS COLUMNAS
-        TableColumn<Usuario, String> colNombre = new TableColumn<>("Nombre");
-
-        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        
-        // Columna "Rol"
-        TableColumn<Usuario, String> colRol = new TableColumn<>("Rol");
-        // ...esta buscará el método 'getRol()' en Usuario.java
-        colRol.setCellValueFactory(new PropertyValueFactory<>("rol"));
-
-        // Columna "Correo"
-        TableColumn<Usuario, String> colCorreo = new TableColumn<>("Correo");
-        // ...esta buscará el método 'getCorreo()' en Usuario.java
-        colCorreo.setCellValueFactory(new PropertyValueFactory<>("correo"));
-
-        // Columna "Estado"
-        TableColumn<Usuario, String> colEstado = new TableColumn<>("Estado");
-        // ...esta buscará el método 'getEstado()' en Usuario.java
-        colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
-
-        // 3. AÑADIR COLUMNAS Y DATOS A LA TABLA
-        
-        // Le metemos todas las columnas que creamos a la tabla.
-        tabla.getColumns().addAll(colNombre, colRol, colCorreo, colEstado);
-        
-        tabla.getItems().addAll(servicioDatos.obtenerUsuariosPrueba());
-
-        // Este 'VBox' mostrará los detalles del usuario que seleccionemos.
-        VBox detalle = new VBox(5);
-        detalle.setStyle(ESTILO_CARD); // Reutilizamos el estilo de tarjeta
-        detalle.getChildren().addAll(
-            new Label("Seleccione un usuario de la tabla para ver más detalles...")
-        );
-
-        // 5. LISTENER DE LA TABLA
-        tabla.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            // 'obs' = el observador (no lo usamos)
-            // 'oldSelection' = el usuario que ESTABA seleccionado (no lo usamos)
-            // 'newSelection' = el usuario que el usuario ACABA de seleccionar
-            
-            // Si el usuario seleccionó algo (y no hizo clic en 'nada')
-            if (newSelection != null) {
-                // 1. Borramos lo que sea que había antes en la cajita de 'Detalle'.
-                detalle.getChildren().clear();
-                
-                // 2. Creamos las nuevas etiquetas con la info del 'newSelection'.
-                Label lblDetalleTitulo = new Label("Detalle de: " + newSelection.getNombre());
-                lblDetalleTitulo.setFont(Font.font(16));
-                lblDetalleTitulo.setStyle("-fx-font-weight: bold;");
-                
-                // 3. Metemos la info nueva. Usamos los 'getters' del objeto 'Usuario'
-                //    (ej: newSelection.getRol()) para sacar la info.
-                detalle.getChildren().addAll(
-                    lblDetalleTitulo,
-                    new Label("Rol: " + newSelection.getRol()),
-                    new Label("Correo: " + newSelection.getCorreo()),
-                    new Label("Última conexión: 29/10/2025") // Dato falso
-                );
-            }
+        btnSalir.setOnAction(e -> {
+            Persistencia.guardar(listaEventos); // guardar al cerrar sesión
+            new VistaLogin(stage).mostrar();
         });
 
-        // 6. MONTAJE FINAL
-        // Metemos el título, la tabla y el panel de detalle en el panel principal
-        panel.getChildren().addAll(titulo, tabla, new Label("Detalles:"), detalle);
-        
-        // Y por último, ponemos este panel en el CENTRO del esqueleto.
-        layoutPrincipal.setCenter(panel);
-    }
 
-    /**
-    * MÉTODO: mostrarPantallaEventos()
-    * CRUD + pestañas del evento seleccionado.
-    */
-    // Pantalla de eventos (CRUD + Tabs)
-
-    private void mostrarPantallaEventos() {
-
-    VBox panel = new VBox(20);
-    panel.setPadding(new Insets(30));
-    panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
-
-    Label titulo = new Label("Gestión de Eventos");
-    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
-    titulo.setStyle("-fx-text-fill: #2c3e50;");
-
-    // Tabla
-    TableView<Evento> tabla = new TableView<>();
-    tabla.setMaxHeight(250);
-    tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-    TableColumn<Evento, String> colNombre = new TableColumn<>("Nombre");
-    colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-
-    TableColumn<Evento, String> colUbicacion = new TableColumn<>("Ubicación");
-    colUbicacion.setCellValueFactory(new PropertyValueFactory<>("ubicacion"));
-
-    TableColumn<Evento, LocalDate> colFecha = new TableColumn<>("Fecha");
-    colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-
-    tabla.getColumns().addAll(colNombre, colUbicacion, colFecha);
-
-    // Formulario
-    TextField txtNombre = new TextField(); txtNombre.setPromptText("Nombre");
-    TextField txtUbicacion = new TextField(); txtUbicacion.setPromptText("Ubicación");
-    DatePicker pickerFecha = new DatePicker(); pickerFecha.setPromptText("Fecha");
-
-    Button btnAgregar = new Button("Agregar");
-    Button btnActualizar = new Button("Actualizar");
-    Button btnEliminar = new Button("Eliminar");
-
-    HBox form = new HBox(10, txtNombre, txtUbicacion, pickerFecha, btnAgregar, btnActualizar, btnEliminar);
-
-    // Refrescar
-    Runnable refrescar = () -> {
-        tabla.getItems().clear();
-        NodoEvento actual = controladorEventos.obtenerCabeza();
-        while (actual != null) {
-            tabla.getItems().add(actual.getDato());
-            actual = actual.getSiguiente();
-        }
-    };
-    refrescar.run();
-
-    // Agregar
-    btnAgregar.setOnAction(e -> {
-        if (txtNombre.getText().isEmpty() || txtUbicacion.getText().isEmpty() || pickerFecha.getValue() == null)
-            return;
-
-        controladorEventos.registrarEvento(txtNombre.getText(), txtUbicacion.getText(), pickerFecha.getValue());
-        refrescar.run();
-        txtNombre.clear(); txtUbicacion.clear(); pickerFecha.setValue(null);
-    });
-
-    // Llenar formulario
-    tabla.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
-
-    if (newValue == null) return;
-
-    Evento ev = newValue; 
-
-    txtNombre.setText(ev.getNombre());
-    txtUbicacion.setText(ev.getUbicacion());
-    pickerFecha.setValue(ev.getFecha());
-});
-
-
-    // Actualizar
-    btnActualizar.setOnAction(e -> {
-        Evento ev = tabla.getSelectionModel().getSelectedItem();
-        if (ev == null) return;
-        controladorEventos.actualizarEvento(ev.getNombre(), pickerFecha.getValue(), txtUbicacion.getText());
-        refrescar.run();
-    });
-
-    // Eliminar
-    btnEliminar.setOnAction(e -> {
-        Evento ev = tabla.getSelectionModel().getSelectedItem();
-        if (ev == null) return;
-        controladorEventos.eliminarEvento(ev.getNombre());
-        refrescar.run();
-    });
-
-    // Contenedor tabs
-    VBox contenedorTabs = new VBox();
-    contenedorTabs.setPadding(new Insets(20));
-    contenedorTabs.getChildren().add(new Label("Seleccione un evento para ver detalles."));
-
-    // Mostrar tabs al seleccionar
-    tabla.getSelectionModel().selectedItemProperty().addListener((obs, old, ev) -> {
-        if (ev != null) contenedorTabs.getChildren().setAll(crearTabsEvento(ev));
-    });
-
-    VBox arriba = new VBox(20, titulo, tabla, form);
-    arriba.setPadding(new Insets(20));
-
-    SplitPane split = new SplitPane();
-    split.setOrientation(javafx.geometry.Orientation.VERTICAL);
-    split.getItems().addAll(arriba, contenedorTabs);
-    split.setDividerPositions(0.45); // 45% arriba, 55% abajo
-
-    layoutPrincipal.setCenter(split);
-
-}
-
-
-/**
- * Tabs del evento (Info, Participantes, Partidos, Resultados, Clasificación, Grafo)
- */
-    private TabPane crearTabsEvento(Evento ev) {
-
-    TabPane tabs = new TabPane();
-
-    // Crear tabs iniciales
-    Tab t1 = new Tab("Info", crearTabInfo(ev));
-    Tab t2 = new Tab("Participantes", crearTabParticipantes(ev));
-    Tab t3 = new Tab("Partidos", crearTabPartidos(ev));
-    Tab t4 = new Tab("Resultados", crearTabResultados(ev));
-    Tab t5 = new Tab("Clasificación", crearTabBST(ev));
-    Tab t6 = new Tab("Grafo", crearTabGrafo(ev));
-
-    t1.setClosable(false);
-    t2.setClosable(false);
-    t3.setClosable(false);
-    t4.setClosable(false);
-    t5.setClosable(false);
-    t6.setClosable(false);
-
-    tabs.getTabs().addAll(t1, t2, t3, t4, t5, t6);
-
-    // Refresco dinámico al seleccionar la pestaña
-    tabs.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
-
-        if (newTab == null) return;
-
-        String nombre = newTab.getText();
-
-        switch (nombre) {
-
-            case "Partidos":
-                newTab.setContent(crearTabPartidos(ev));
-                break;
-
-            case "Resultados":
-                newTab.setContent(crearTabResultados(ev));
-                break;
-
-            case "Grafo": 
-                newTab.setContent(crearTabGrafo(ev));
-                break;
-
-            case "Clasificación":
-                newTab.setContent(crearTabBST(ev));
-                break;
-
-            case "Participantes":
-                newTab.setContent(crearTabParticipantes(ev));
-                break;
-
-            case "Info":
-                newTab.setContent(crearTabInfo(ev));
-                break;
-        }
-    });
-
-    return tabs;
-
-}
-
-    // Tab info
-    private VBox crearTabInfo(Evento ev) {
-    VBox v = new VBox(new Label("Información del evento"));
-    v.setPadding(new Insets(20));
-    return v;
-}
-
-    // Tab Participantes del evento
-    private VBox crearTabParticipantes(Evento ev) {
-
-    VBox panel = new VBox(20);
-    panel.setPadding(new Insets(20));
-
-    Label titulo = new Label("Participantes del Evento");
-    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-
-    ListView<HBox> listaVisual = new ListView<>();
-    ListaParticipantes lista = ev.getParticipantes();
-
-    // REFRESCAR
-    Runnable refrescar = () -> {
-        listaVisual.getItems().clear();
-        NodoParticipante actual = lista.getCabeza();
-        while (actual != null) {
-            listaVisual.getItems().add(crearItemVisual(actual.getDato(), ""));
-            actual = actual.getSiguiente();
-        }
-    };
-    refrescar.run();
-
-    // FORMULARIO
-    TextField txtNombre = new TextField(); txtNombre.setPromptText("Nombre");
-    TextField txtEquipo = new TextField(); txtEquipo.setPromptText("Equipo");
-    TextField txtRol = new TextField(); txtRol.setPromptText("Rol");
-    TextField txtEstado = new TextField(); txtEstado.setPromptText("Estado");
-
-    Button btnAgregar = new Button("Agregar");
-    Button btnActualizar = new Button("Actualizar");
-    btnActualizar.setDisable(true);
-
-    // AGREGAR
-    btnAgregar.setOnAction(e -> {
-        if (txtNombre.getText().isEmpty() || txtEquipo.getText().isEmpty() ||
-            txtRol.getText().isEmpty() || txtEstado.getText().isEmpty()) return;
-
-        lista.agregar(new Participante(
-            txtNombre.getText().trim(),
-            txtEquipo.getText().trim(),
-            txtRol.getText().trim(),
-            txtEstado.getText().trim()
-        ));
-
-        refrescar.run();
-        txtNombre.clear(); txtEquipo.clear(); txtRol.clear(); txtEstado.clear();
-    });
-
-    // SELECCIONAR PARA EDITAR
-    listaVisual.getSelectionModel().selectedItemProperty().addListener((obs, old, nuevo) -> {
-        if (nuevo != null && nuevo.getUserData() instanceof Participante) {
-            Participante p = (Participante) nuevo.getUserData();
-            txtNombre.setText(p.getNombre());
-            txtEquipo.setText(p.getEquipo());
-            txtRol.setText(p.getRol());
-            txtEstado.setText(p.getEstado());
-            btnActualizar.setDisable(false);
-        }
-    });
-
-    // ACTUALIZAR
-    btnActualizar.setOnAction(e -> {
-        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
-        if (seleccionado == null) return;
-
-        Participante p = (Participante) seleccionado.getUserData();
-
-        p.setNombre(txtNombre.getText().trim());
-        p.setEquipo(txtEquipo.getText().trim());
-        p.setRol(txtRol.getText().trim());
-        p.setEstado(txtEstado.getText().trim());
-
-        refrescar.run();
-        listaVisual.getSelectionModel().clearSelection();
-        btnActualizar.setDisable(true);
-
-        txtNombre.clear(); txtEquipo.clear(); txtRol.clear(); txtEstado.clear();
-    });
-
-    // BUSCAR
-    TextField txtBuscar = new TextField();
-    txtBuscar.setPromptText("Buscar participante...");
-    txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> {
-        listaVisual.getItems().clear();
-        if (newVal == null || newVal.isEmpty()) {
-            refrescar.run();
-            return;
-        }
-        java.util.List<Participante> encontrados = new java.util.ArrayList<>();
-        lista.buscarRecursivoContiene(lista.getCabeza(), newVal, encontrados);
-        for (Participante p : encontrados) {
-            listaVisual.getItems().add(crearItemVisual(p, newVal));
-        }
-    });
-
-    // ELIMINAR
-    Button btnEliminar = new Button("Eliminar");
-    btnEliminar.setOnAction(e -> {
-        HBox sel = listaVisual.getSelectionModel().getSelectedItem();
-        if (sel != null) {
-            Participante p = (Participante) sel.getUserData();
-            lista.eliminarPorNombre(p.getNombre());
-            refrescar.run();
-        }
-    });
-
-    // LAYOUT FINAL
-    HBox form = new HBox(10, txtNombre, txtEquipo, txtRol, txtEstado, btnAgregar, btnActualizar);
-    HBox acciones = new HBox(10, btnEliminar);
-
-    panel.getChildren().addAll(
-        titulo,
-        listaVisual,
-        new Label("Agregar / Editar participante:"),
-        form,
-        new Label("Buscar:"),
-        txtBuscar,
-        new Label("Acciones:"),
-        acciones
-    );
-
-    return panel;
-}
-
-
-
-    // Tab Partidos del evento (cola + pila)
-    private VBox crearTabPartidos(Evento ev) {
-
-    VBox panel = new VBox(20);
-    panel.setPadding(new Insets(20));
-
-    Label titulo = new Label("Partidos del Evento");
-    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-
-    // generar equipos desde participantes
-    java.util.Set<String> equipos = new java.util.HashSet<>();
-    NodoParticipante nodo = ev.getParticipantes().getCabeza();
-    System.out.println("Evento en Partidos => " + ev);
-    while (nodo != null) {
-        equipos.add(nodo.getDato().getEquipo());
-        nodo = nodo.getSiguiente();
-    }
-
-    ComboBox<String> cbA = new ComboBox<>();
-    ComboBox<String> cbB = new ComboBox<>();
-    cbA.getItems().addAll(equipos);
-    cbB.getItems().addAll(equipos);
-    cbA.setPromptText("Equipo A");
-    cbB.setPromptText("Equipo B");
-
-    DatePicker fecha = new DatePicker();
-    fecha.setPromptText("Fecha");
-
-    TextField txtLugar = new TextField();
-    txtLugar.setPromptText("Lugar");
-
-    Button btnAgregar = new Button("Agregar Partido");
-
-    HBox form = new HBox(10, cbA, cbB, fecha, txtLugar, btnAgregar);
-
-    // lista visual para la cola
-    ListView<String> lista = new ListView<>();
-
-    Runnable refrescar = () -> {
-        lista.getItems().clear();
-        NodoPartido act = ev.getColaPartidos().getFrente();
-        while (act != null) {
-            lista.getItems().add(act.getPartido().toString());
-            act = act.getSiguiente();
-        }
-    };
-    refrescar.run();
-
-    // agregar partido
-    btnAgregar.setOnAction(e -> {
-        String a = cbA.getValue();
-        String b = cbB.getValue();
-        LocalDate f = fecha.getValue();
-        String l = txtLugar.getText();
-
-        if (a == null || b == null || f == null || l.isEmpty()) return;
-        if (a.equals(b)) return;
-
-        Equipo ea = new Equipo(a);
-        Equipo eb = new Equipo(b);
-
-        Partido p = new Partido(ea, eb, f, l);
-        ev.getColaPartidos().encolar(p);
-
-        refrescar.run();
-
-        cbA.setValue(null);
-        cbB.setValue(null);
-        fecha.setValue(null);
-        txtLugar.clear();
-    });
-
-    // marcar como jugado
-    Button btnJugar = new Button("Marcar como jugado");
-
-    btnJugar.setOnAction(e -> {
-        Partido p = ev.getColaPartidos().desencolar();
-        if (p == null) return;
-
-        TextInputDialog d = new TextInputDialog();
-        d.setTitle("Resultado");
-        d.setHeaderText("Marcador (ejemplo: 2-1)");
-        d.setContentText("Ingrese resultado:");
-        String entrada = d.showAndWait().orElse(null);
-
-        if (entrada == null || !entrada.contains("-")) return;
-
-        try {
-            String[] x = entrada.split("-");
-            int ga = Integer.parseInt(x[0].trim());
-            int gb = Integer.parseInt(x[1].trim());
-
-            Resultado r = new Resultado(p, ga, gb);
-            ev.getPilaResultados().apilar(r);
-            // ACTUALIZAR CLASIFICACIÓN (BST)
-            if (ga > gb) {
-                int victorias = obtenerVictorias(ev, p.getEquipoA().getNombre()) + 1;
-                ev.getBST().insertar(p.getEquipoA().getNombre(), victorias);
-
-                } else if (gb > ga) {
-                int victorias = obtenerVictorias(ev, p.getEquipoB().getNombre()) + 1;
-                ev.getBST().insertar(p.getEquipoB().getNombre(), victorias);
+        menu.getChildren().addAll(
+                lblLogo,
+                btnInicio,
+                btnEventos,
+                btnParticipantes,
+                btnPartidos,
+                btnResultados,
+                btnClasificacion,
+                btnGrafo,
+                btnAjustes,
+                new Separator(),
+                btnSalir
+        );
+
+        layoutPrincipal.setLeft(menu);
+
+        // pantalla inicial
+        layoutPrincipal.setCenter(new VistaInicio().render());
+
+        // escena
+        Scene scene = new Scene(layoutPrincipal, 1200, 800);
+        stage.setScene(scene);
+        stage.setTitle("Match Manager - Panel Principal");
+        stage.centerOnScreen();
+
+        // Guardar automáticamente al cerrar la ventana
+        stage.setOnCloseRequest(e2 -> Persistencia.guardar(listaEventos));
     }
 
 
-            // Actualizar el grafo del evento
-            ev.getGrafoEquipos().agregarEnfrentamiento(
-                p.getEquipoA().getNombre(),
-                p.getEquipoB().getNombre()
-            );
-            refrescar.run();
-        } catch (Exception ex) {
-            return;
-        }
-    });
-
-    panel.getChildren().addAll(
-        titulo,
-        form,
-        new Label("Partidos pendientes:"),
-        lista,
-        btnJugar
-    );
-
-    return panel;
-}
-    // Obtener victorias actuales de un equipo dentro del BST
-    private int obtenerVictorias(Evento ev, String equipo) {
-
-    for (String linea : ev.getBST().obtenerClasificacion()) {
-
-        // Ejemplo de línea: "Tigres — 4 victorias"
-        if (linea.startsWith(equipo + " —")) {
-
-            String numero = linea.substring(linea.indexOf("—") + 1)
-                                  .replace("victorias", "")
-                                  .trim();
-            return Integer.parseInt(numero);
-        }
+    // Crear botón estilizado
+    private Button crearBoton(String texto) {
+        Button btn = new Button(texto);
+        btn.setMaxWidth(Double.MAX_VALUE);
+        btn.setAlignment(Pos.BASELINE_LEFT);
+        btn.setPadding(new Insets(10, 10, 10, 20));
+        btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #ecf0f1;");
+        return btn;
     }
-
-    return 0; // si no existe en el BST aún
-}
-
-
-// Tab Resultados del evento (pila LIFO)
-private VBox crearTabResultados(Evento ev) {
-
-    VBox panel = new VBox(20);
-    panel.setPadding(new Insets(20));
-
-    Label titulo = new Label("Resultados del Evento");
-    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-
-    ListView<String> listaResultados = new ListView<>();
-    listaResultados.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
-
-    // refrescar pila
-    Runnable refrescar = () -> {
-        listaResultados.getItems().clear();
-
-        NodoResultado nodo = ev.getPilaResultados().getCima();
-        while (nodo != null) {
-            Resultado r = nodo.getResultado();
-
-            String linea = 
-                r.getPartido().getEquipoA().getNombre() + " " + r.getGolesA() +
-                " - " +
-                r.getGolesB() + " " + r.getPartido().getEquipoB().getNombre();
-
-            listaResultados.getItems().add(linea);
-
-            nodo = nodo.getSiguiente();
-        }
-    };
-
-    refrescar.run();
-
-    // botón refrescar manual
-    Button btnRefrescar = new Button("Actualizar");
-    btnRefrescar.setOnAction(e -> refrescar.run());
-
-    panel.getChildren().addAll(
-        titulo,
-        listaResultados,
-        btnRefrescar
-    );
-
-    return panel;
-}
-
-
-  // Tab Grafo (enfrentamientos entre equipos)
-    private VBox crearTabGrafo(Evento ev) {
-
-    VBox panel = new VBox(20);
-    panel.setPadding(new Insets(20));
-
-    Label titulo = new Label("Grafo de Enfrentamientos (No Dirigido)");
-    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-
-    ListView<String> lista = new ListView<>();
-    lista.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
-
-    // Construir visualización del grafo
-    ev.getGrafoEquipos().getAdyacencias().forEach((equipo, vecinos) -> {
-        String linea = equipo + " → " + String.join(", ", vecinos);
-        lista.getItems().add(linea);
-    });
-
-    panel.getChildren().addAll(
-        titulo,
-        lista
-    );
-
-    return panel;
-}
-
-
-    // Tab Clasificación (BST)
-    private VBox crearTabBST(Evento ev) {
-
-    VBox panel = new VBox(20);
-    panel.setPadding(new Insets(20));
-
-    Label titulo = new Label("Clasificación por Victorias (BST)");
-    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-
-    ListView<String> lista = new ListView<>();
-    lista.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
-
-    // obtener lista ordenada desde el BST
-    lista.getItems().addAll(ev.getBST().obtenerClasificacion());
-
-    panel.getChildren().addAll(titulo, lista);
-
-    return panel;
-}
-
-
-
-    /**
-     * MÉTODO: mostrarPantallaAjustes()
-     * "Dibuja" la pantalla de Configuración.
-     * los botones y menús no hacen nada, solo están ahí para que la pantalla no se vea vacía.
-     */
-    private void mostrarPantallaAjustes() {
-        VBox panel = new VBox(20);
-        panel.setPadding(new Insets(30));
-        panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
-
-        Label titulo = new Label("Configuración del Sistema");
-        titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
-        titulo.setStyle("-fx-text-fill: #2c3e50;");
-
-        // Usamos un 'GridPane'(cuadrícula)
-        // para poner cosas por fila y columna.
-        GridPane grid = new GridPane();
-        grid.setHgap(20); // Espacio horizontal entre columnas
-        grid.setVgap(15); // Espacio vertical entre filas
-        grid.setStyle(ESTILO_CARD); // Reutilizamos el estilo de tarjeta
-
-        // Fila 0: Idioma
-        // 'grid.add(nodo, columna, fila)'
-        grid.add(new Label("Idioma:"), 0, 0); // (Col 0, Fila 0)
-        grid.add(new ComboBox<>(javafx.collections.FXCollections.observableArrayList("Español", "Inglés")), 1, 0); // (Col 1, Fila 0)
-
-        // Fila 1: Zona Horaria
-        grid.add(new Label("Zona Horaria:"), 0, 1);
-        grid.add(new ComboBox<>(javafx.collections.FXCollections.observableArrayList("América/Costa Rica", "UTC")), 1, 1);
-
-        // Fila 2: Tema
-        grid.add(new Label("Tema:"), 0, 2);
-        grid.add(new ComboBox<>(javafx.collections.FXCollections.observableArrayList("Claro", "Oscuro")), 1, 2);
-        
-        // Fila 3: Separador
-        grid.add(new Separator(), 0, 3, 2, 1);
-        
-        // Fila 4: Seguridad
-        grid.add(new Label("Seguridad:"), 0, 4);
-        Button btnPass = new Button("Cambiar Contraseña");
-        grid.add(btnPass, 1, 4);
-        
-        // (Estos botones y ComboBox no están "conectados" a nada,
-        // no tienen 'setOnAction', por eso son solo de adorno).
-
-        panel.getChildren().addAll(titulo, grid);
-        
-        // Ponemos el panel de ajustes en el CENTRO
-        layoutPrincipal.setCenter(panel);
-    }
-    
-    // Pantalla Participantes (global)
-    private void mostrarPantallaParticipantes() {
-
-    VBox panel = new VBox(20);
-    panel.setPadding(new Insets(30));
-    panel.setStyle("-fx-background-color: " + COLOR_FONDO_GENERAL + ";");
-
-    Label titulo = new Label("Todos los Participantes (Todos los Eventos)");
-    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
-    titulo.setStyle("-fx-text-fill: #2c3e50;");
-
-    ListView<HBox> listaVisual = new ListView<>();
-    listaVisual.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
-
-    // lista global de participantes
-    ListaParticipantes participantesGlobales = new ListaParticipantes();
-
-    // construir lista global desde todos los eventos
-    NodoEvento ne = listaEventos.getCabeza();
-    while (ne != null) {
-        ListaParticipantes lp = ne.getDato().getParticipantes();
-        NodoParticipante np = lp.getCabeza();
-        while (np != null) {
-            participantesGlobales.agregar(np.getDato());
-            np = np.getSiguiente();
-        }
-        ne = ne.getSiguiente();
-    }
-
-    // refrescar
-    Runnable refrescar = () -> {
-        listaVisual.getItems().clear();
-        NodoParticipante actual = participantesGlobales.getCabeza();
-        while (actual != null) {
-            listaVisual.getItems().add(crearItemVisual(actual.getDato(), ""));
-            actual = actual.getSiguiente();
-        }
-    };
-    refrescar.run();
-
-    // búsqueda recursiva global
-    TextField txtBuscar = new TextField();
-    txtBuscar.setPromptText("Buscar participante...");
-
-    txtBuscar.textProperty().addListener((obs, oldValue, newValue) -> {
-        listaVisual.getItems().clear();
-
-        if (newValue == null || newValue.isEmpty()) {
-            refrescar.run();
-            return;
-        }
-
-        java.util.List<Participante> encontrados = new java.util.ArrayList<>();
-        participantesGlobales.buscarRecursivoContiene(participantesGlobales.getCabeza(), newValue, encontrados);
-
-        for (Participante p : encontrados) {
-            listaVisual.getItems().add(crearItemVisual(p, newValue));
-        }
-    });
-
-    panel.getChildren().addAll(
-        titulo,
-        listaVisual,
-        new Label("Buscar:"),
-        txtBuscar
-    );
-
-    layoutPrincipal.setCenter(panel);
-}
-
-    // ítem visual participante
-    private HBox crearItemVisual(Participante p, String highlight) {
-
-    HBox box = new HBox(5);
-
-    String nombre = p.getNombre();
-    TextFlow tfNombre;
-
-    if (!highlight.isEmpty() && nombre.toLowerCase().contains(highlight.toLowerCase())) {
-        int start = nombre.toLowerCase().indexOf(highlight.toLowerCase());
-        int end = start + highlight.length();
-
-        Text antes = new Text(nombre.substring(0, start));
-        Text match = new Text(nombre.substring(start, end));
-        match.setFill(Color.RED);
-        match.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
-        Text despues = new Text(nombre.substring(end));
-
-        tfNombre = new TextFlow(new Text("👤 "), antes, match, despues);
-    } else {
-        tfNombre = new TextFlow(new Text("👤 " + nombre));
-    }
-
-    Label lblEquipo = new Label(" | 🏆 " + p.getEquipo());
-    Label lblRol = new Label(" | 🎭 " + p.getRol());
-    Label lblEstado = new Label(" | 📌 " + p.getEstado());
-
-    box.getChildren().addAll(tfNombre, lblEquipo, lblRol, lblEstado);
-
-    box.setUserData(p);
-
-    return box;
-}
-
-
 }
