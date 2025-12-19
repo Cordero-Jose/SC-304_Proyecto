@@ -17,8 +17,8 @@ public class Evento {
     private ListaParticipantes participantes;   // lista doble
     private ColaPartidos colaPartidos;          // cola dinámica
     private PilaResultados pilaResultados;      // pila dinámica
-    //private GrafoEquipos grafoEnfrentamientos;  // grafo no dirigido
-    //private BSTClasificacion bstClasificacion;  // árbol binario de búsqueda
+    private GrafoEquipos grafoEnfrentamientos;  // grafo no dirigido
+    private BSTClasificacion bstClasificacion;   // árbol de clasificación
 
     // Constructor
     public Evento(String nombre, String ubicacion, LocalDate fecha) {
@@ -30,8 +30,8 @@ public class Evento {
         participantes = new ListaParticipantes();
         colaPartidos = new ColaPartidos();
         pilaResultados = new PilaResultados();
-       // grafoEnfrentamientos = new GrafoEquipos();
-        //bstClasificacion = new BSTClasificacion();
+        grafoEnfrentamientos = new GrafoEquipos();
+        bstClasificacion = new BSTClasificacion();
     }
 
     // Getters básicos
@@ -48,11 +48,12 @@ public class Evento {
     public ListaParticipantes getParticipantes() { return participantes; }
     public ColaPartidos getColaPartidos() { return colaPartidos; }
     public PilaResultados getPilaResultados() { return pilaResultados; }
-    //public GrafoEquipos getGrafo() { return grafoEnfrentamientos; }
-    //public BSTClasificacion getBST() { return bstClasificacion; }
+    public GrafoEquipos getGrafoEquipos() { return grafoEnfrentamientos; }
+    public BSTClasificacion getBST() { return bstClasificacion; }
 
     @Override
     public String toString() {
         return nombre + " | " + ubicacion + " | " + fecha;
     }
 }
+

@@ -367,7 +367,7 @@ public class VistaDashboard {
     * MÉTODO: mostrarPantallaEventos()
     * CRUD + pestañas del evento seleccionado.
     */
-  // Pantalla de eventos (CRUD + Tabs)
+    // Pantalla de eventos (CRUD + Tabs)
 
     private void mostrarPantallaEventos() {
 
@@ -428,13 +428,17 @@ public class VistaDashboard {
     });
 
     // Llenar formulario
-    tabla.getSelectionModel().selectedItemProperty().addListener((obs, old, ev) -> {
-        if (ev != null) {
-            txtNombre.setText(ev.getNombre());
-            txtUbicacion.setText(ev.getUbicacion());
-            pickerFecha.setValue(ev.getFecha());
-        }
-    });
+    tabla.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
+
+    if (newValue == null) return;
+
+    Evento ev = newValue; 
+
+    txtNombre.setText(ev.getNombre());
+    txtUbicacion.setText(ev.getUbicacion());
+    pickerFecha.setValue(ev.getFecha());
+});
+
 
     // Actualizar
     btnActualizar.setOnAction(e -> {
@@ -474,11 +478,15 @@ public class VistaDashboard {
 
 }
 
-// Tabs del evento
-private TabPane crearTabsEvento(Evento ev) {
+
+/**
+ * Tabs del evento (Info, Participantes, Partidos, Resultados, Clasificación, Grafo)
+ */
+    private TabPane crearTabsEvento(Evento ev) {
 
     TabPane tabs = new TabPane();
 
+    // Crear tabs iniciales
     Tab t1 = new Tab("Info", crearTabInfo(ev));
     Tab t2 = new Tab("Participantes", crearTabParticipantes(ev));
     Tab t3 = new Tab("Partidos", crearTabPartidos(ev));
@@ -495,22 +503,47 @@ private TabPane crearTabsEvento(Evento ev) {
 
     tabs.getTabs().addAll(t1, t2, t3, t4, t5, t6);
 
+    // Refresco dinámico al seleccionar la pestaña
     tabs.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
-    if (newTab.getText().equals("Partidos")) {
-        newTab.setContent(crearTabPartidos(ev));
-    }
 
-    if (newTab.getText().equals("Resultados")) {
-        newTab.setContent(crearTabResultados(ev));
-    }
-});
+        if (newTab == null) return;
 
+        String nombre = newTab.getText();
+
+        switch (nombre) {
+
+            case "Partidos":
+                newTab.setContent(crearTabPartidos(ev));
+                break;
+
+            case "Resultados":
+                newTab.setContent(crearTabResultados(ev));
+                break;
+
+            case "Grafo": 
+                newTab.setContent(crearTabGrafo(ev));
+                break;
+
+            case "Clasificación":
+                newTab.setContent(crearTabBST(ev));
+                break;
+
+            case "Participantes":
+                newTab.setContent(crearTabParticipantes(ev));
+                break;
+
+            case "Info":
+                newTab.setContent(crearTabInfo(ev));
+                break;
+        }
+    });
 
     return tabs;
+
 }
 
-// Tab info
-private VBox crearTabInfo(Evento ev) {
+    // Tab info
+    private VBox crearTabInfo(Evento ev) {
     VBox v = new VBox(new Label("Información del evento"));
     v.setPadding(new Insets(20));
     return v;
@@ -525,15 +558,10 @@ private VBox crearTabInfo(Evento ev) {
     Label titulo = new Label("Participantes del Evento");
     titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
 
-    // lista visual
     ListView<HBox> listaVisual = new ListView<>();
-    listaVisual.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
-
     ListaParticipantes lista = ev.getParticipantes();
-    System.out.println("Evento en Participantes => " + ev);
 
-
-    // refrescar lista
+    // REFRESCAR
     Runnable refrescar = () -> {
         listaVisual.getItems().clear();
         NodoParticipante actual = lista.getCabeza();
@@ -544,90 +572,100 @@ private VBox crearTabInfo(Evento ev) {
     };
     refrescar.run();
 
-    // formulario agregar
-    TextField txtNombre = new TextField();
-    txtNombre.setPromptText("Nombre");
-
-    TextField txtEquipo = new TextField();
-    txtEquipo.setPromptText("Equipo");
-
-    TextField txtRol = new TextField();
-    txtRol.setPromptText("Rol");
-
-    TextField txtEstado = new TextField();
-    txtEstado.setPromptText("Estado");
+    // FORMULARIO
+    TextField txtNombre = new TextField(); txtNombre.setPromptText("Nombre");
+    TextField txtEquipo = new TextField(); txtEquipo.setPromptText("Equipo");
+    TextField txtRol = new TextField(); txtRol.setPromptText("Rol");
+    TextField txtEstado = new TextField(); txtEstado.setPromptText("Estado");
 
     Button btnAgregar = new Button("Agregar");
+    Button btnActualizar = new Button("Actualizar");
+    btnActualizar.setDisable(true);
 
+    // AGREGAR
     btnAgregar.setOnAction(e -> {
-        String n = txtNombre.getText().trim();
-        String eq = txtEquipo.getText().trim();
-        String rol = txtRol.getText().trim();
-        String est = txtEstado.getText().trim();
+        if (txtNombre.getText().isEmpty() || txtEquipo.getText().isEmpty() ||
+            txtRol.getText().isEmpty() || txtEstado.getText().isEmpty()) return;
 
-        if (n.isEmpty() || eq.isEmpty() || rol.isEmpty() || est.isEmpty())
-            return;
-
-        Participante nuevo = new Participante(n, eq, rol, est);
-        lista.agregar(nuevo);
+        lista.agregar(new Participante(
+            txtNombre.getText().trim(),
+            txtEquipo.getText().trim(),
+            txtRol.getText().trim(),
+            txtEstado.getText().trim()
+        ));
 
         refrescar.run();
-
-        txtNombre.clear();
-        txtEquipo.clear();
-        txtRol.clear();
-        txtEstado.clear();
-
-        System.out.println("Participantes REALES en el evento:");
-        NodoParticipante np = lista.getCabeza();
-        while (np != null) {
-        System.out.println(" - " + np.getDato().getNombre() + " | equipo: " + np.getDato().getEquipo());
-        np = np.getSiguiente();
-}
-
+        txtNombre.clear(); txtEquipo.clear(); txtRol.clear(); txtEstado.clear();
     });
 
-    HBox formAgregar = new HBox(10, txtNombre, txtEquipo, txtRol, txtEstado, btnAgregar);
+    // SELECCIONAR PARA EDITAR
+    listaVisual.getSelectionModel().selectedItemProperty().addListener((obs, old, nuevo) -> {
+        if (nuevo != null && nuevo.getUserData() instanceof Participante) {
+            Participante p = (Participante) nuevo.getUserData();
+            txtNombre.setText(p.getNombre());
+            txtEquipo.setText(p.getEquipo());
+            txtRol.setText(p.getRol());
+            txtEstado.setText(p.getEstado());
+            btnActualizar.setDisable(false);
+        }
+    });
 
-    // buscar recursivo
+    // ACTUALIZAR
+    btnActualizar.setOnAction(e -> {
+        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) return;
+
+        Participante p = (Participante) seleccionado.getUserData();
+
+        p.setNombre(txtNombre.getText().trim());
+        p.setEquipo(txtEquipo.getText().trim());
+        p.setRol(txtRol.getText().trim());
+        p.setEstado(txtEstado.getText().trim());
+
+        refrescar.run();
+        listaVisual.getSelectionModel().clearSelection();
+        btnActualizar.setDisable(true);
+
+        txtNombre.clear(); txtEquipo.clear(); txtRol.clear(); txtEstado.clear();
+    });
+
+    // BUSCAR
     TextField txtBuscar = new TextField();
     txtBuscar.setPromptText("Buscar participante...");
-
-    txtBuscar.textProperty().addListener((obs, oldValue, newValue) -> {
+    txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> {
         listaVisual.getItems().clear();
-
-        if (newValue == null || newValue.isEmpty()) {
+        if (newVal == null || newVal.isEmpty()) {
             refrescar.run();
             return;
         }
-
         java.util.List<Participante> encontrados = new java.util.ArrayList<>();
-        lista.buscarRecursivoContiene(lista.getCabeza(), newValue, encontrados);
-
+        lista.buscarRecursivoContiene(lista.getCabeza(), newVal, encontrados);
         for (Participante p : encontrados) {
-            listaVisual.getItems().add(crearItemVisual(p, newValue));
+            listaVisual.getItems().add(crearItemVisual(p, newVal));
         }
     });
 
-    // eliminar participante
+    // ELIMINAR
     Button btnEliminar = new Button("Eliminar");
     btnEliminar.setOnAction(e -> {
-        HBox seleccionado = listaVisual.getSelectionModel().getSelectedItem();
-        if (seleccionado != null && seleccionado.getUserData() instanceof Participante) {
-            Participante p = (Participante) seleccionado.getUserData();
+        HBox sel = listaVisual.getSelectionModel().getSelectedItem();
+        if (sel != null) {
+            Participante p = (Participante) sel.getUserData();
             lista.eliminarPorNombre(p.getNombre());
             refrescar.run();
         }
     });
 
+    // LAYOUT FINAL
+    HBox form = new HBox(10, txtNombre, txtEquipo, txtRol, txtEstado, btnAgregar, btnActualizar);
     HBox acciones = new HBox(10, btnEliminar);
 
     panel.getChildren().addAll(
         titulo,
         listaVisual,
-        new Label("Agregar nuevo participante:"),
-        formAgregar,
-        new Label("Buscar participante:"),
+        new Label("Agregar / Editar participante:"),
+        form,
+        new Label("Buscar:"),
         txtBuscar,
         new Label("Acciones:"),
         acciones
@@ -637,8 +675,9 @@ private VBox crearTabInfo(Evento ev) {
 }
 
 
-// Tab Partidos del evento (cola + pila)
-private VBox crearTabPartidos(Evento ev) {
+
+    // Tab Partidos del evento (cola + pila)
+    private VBox crearTabPartidos(Evento ev) {
 
     VBox panel = new VBox(20);
     panel.setPadding(new Insets(20));
@@ -731,7 +770,22 @@ private VBox crearTabPartidos(Evento ev) {
 
             Resultado r = new Resultado(p, ga, gb);
             ev.getPilaResultados().apilar(r);
+            // ACTUALIZAR CLASIFICACIÓN (BST)
+            if (ga > gb) {
+                int victorias = obtenerVictorias(ev, p.getEquipoA().getNombre()) + 1;
+                ev.getBST().insertar(p.getEquipoA().getNombre(), victorias);
 
+                } else if (gb > ga) {
+                int victorias = obtenerVictorias(ev, p.getEquipoB().getNombre()) + 1;
+                ev.getBST().insertar(p.getEquipoB().getNombre(), victorias);
+    }
+
+
+            // Actualizar el grafo del evento
+            ev.getGrafoEquipos().agregarEnfrentamiento(
+                p.getEquipoA().getNombre(),
+                p.getEquipoB().getNombre()
+            );
             refrescar.run();
         } catch (Exception ex) {
             return;
@@ -747,6 +801,23 @@ private VBox crearTabPartidos(Evento ev) {
     );
 
     return panel;
+}
+    // Obtener victorias actuales de un equipo dentro del BST
+    private int obtenerVictorias(Evento ev, String equipo) {
+
+    for (String linea : ev.getBST().obtenerClasificacion()) {
+
+        // Ejemplo de línea: "Tigres — 4 victorias"
+        if (linea.startsWith(equipo + " —")) {
+
+            String numero = linea.substring(linea.indexOf("—") + 1)
+                                  .replace("victorias", "")
+                                  .trim();
+            return Integer.parseInt(numero);
+        }
+    }
+
+    return 0; // si no existe en el BST aún
 }
 
 
@@ -797,19 +868,53 @@ private VBox crearTabResultados(Evento ev) {
 }
 
 
-// Tab clasificación
-private VBox crearTabBST(Evento ev) {
-    VBox v = new VBox(new Label("Clasificación (BST)"));
-    v.setPadding(new Insets(20));
-    return v;
+  // Tab Grafo (enfrentamientos entre equipos)
+    private VBox crearTabGrafo(Evento ev) {
+
+    VBox panel = new VBox(20);
+    panel.setPadding(new Insets(20));
+
+    Label titulo = new Label("Grafo de Enfrentamientos (No Dirigido)");
+    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+
+    ListView<String> lista = new ListView<>();
+    lista.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
+
+    // Construir visualización del grafo
+    ev.getGrafoEquipos().getAdyacencias().forEach((equipo, vecinos) -> {
+        String linea = equipo + " → " + String.join(", ", vecinos);
+        lista.getItems().add(linea);
+    });
+
+    panel.getChildren().addAll(
+        titulo,
+        lista
+    );
+
+    return panel;
 }
 
-// Tab grafo
-private VBox crearTabGrafo(Evento ev) {
-    VBox v = new VBox(new Label("Grafo de enfrentamientos"));
-    v.setPadding(new Insets(20));
-    return v;
+
+    // Tab Clasificación (BST)
+    private VBox crearTabBST(Evento ev) {
+
+    VBox panel = new VBox(20);
+    panel.setPadding(new Insets(20));
+
+    Label titulo = new Label("Clasificación por Victorias (BST)");
+    titulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+
+    ListView<String> lista = new ListView<>();
+    lista.setStyle("-fx-background-color: white; -fx-background-radius: 5;");
+
+    // obtener lista ordenada desde el BST
+    lista.getItems().addAll(ev.getBST().obtenerClasificacion());
+
+    panel.getChildren().addAll(titulo, lista);
+
+    return panel;
 }
+
 
 
     /**

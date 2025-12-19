@@ -2,6 +2,7 @@ com\fidelitas\matchmanager\controlador\ServicioDatosSimulados.class
 com\fidelitas\matchmanager\modelo\NodoEvento.class
 com\fidelitas\matchmanager\controlador\ControladorEventos.class
 com\fidelitas\matchmanager\vista\VistaDashboard.class
+com\fidelitas\matchmanager\modelo\GrafoEquipos.class
 com\fidelitas\matchmanager\modelo\NodoResultado.class
 com\fidelitas\matchmanager\modelo\ListaParticipantes.class
 com\fidelitas\matchmanager\modelo\NodoParticipante.class
@@ -9,10 +10,12 @@ com\fidelitas\matchmanager\modelo\Resultado.class
 com\fidelitas\matchmanager\modelo\NodoPartido.class
 com\fidelitas\matchmanager\modelo\Participante.class
 com\fidelitas\matchmanager\Main.class
+com\fidelitas\matchmanager\modelo\NodoBST.class
 com\fidelitas\matchmanager\modelo\ColaPartidos.class
 com\fidelitas\matchmanager\modelo\ListaEventos.class
 com\fidelitas\matchmanager\modelo\Partido.class
 com\fidelitas\matchmanager\modelo\Equipo.class
+com\fidelitas\matchmanager\modelo\BSTClasificacion.class
 com\fidelitas\matchmanager\vista\VistaLogin.class
 com\fidelitas\matchmanager\App.class
 com\fidelitas\matchmanager\modelo\PilaResultados.class
